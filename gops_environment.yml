@@ -25,3 +25,4 @@ dependencies:
     - slxpy
     - openpyxl
     - intel-openmp
+    - pybind11-stubgen == 0.16.2
