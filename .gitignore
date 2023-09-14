@@ -162,3 +162,6 @@ dmypy.json
 
 # experiment file
 experiment
+gops/env/env_matlab/resources/simu_vehicle3dof_v2/vehicle3dof_ert_rtw/
+gops/env/env_matlab/resources/simu_vehicle3dof_v2/slprj/
+*.mexw64
