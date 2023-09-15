@@ -22,7 +22,7 @@ dependencies:
     - box2d
     - pygame
     - pyglet
-    - slxpy == 1.3.2
+    - slxpy == 1.6.0
     - openpyxl
     - intel-openmp
     - pybind11-stubgen == 0.16.2
