@@ -137,12 +137,14 @@ class SimuVeh3dofconti(gym.Env,):
 
         # Reset takes an optional callback
         # This callback will be called after model & parameter initialization and before taking first step.
-        state = self.env.reset(callback)
+        state,info = self.env.reset(preinit=callback)
+        # state = self.reset.callback()
         obs = self.postprocess(state)
         return obs
 
     def _physics_step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, dict]:
-        state, reward, done, info = self.env.step(action)
+        state, reward, terminated, truncated, info = self.env.step(action)
+        done = terminated or truncated
         self._state = state
         return state, reward, done, info
 
