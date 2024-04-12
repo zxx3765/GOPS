@@ -27,8 +27,8 @@ class Veh3DoFTrackingDetour(Veh3DoFTracking):
             max_steer=max_steer,
             **kwargs,
         )
-        self.init_high = np.array([1, 0.0, np.pi / 36, 2, 0.1, 0.1], dtype=np.float32)
-        self.init_low = -np.array([1, 0.8, np.pi / 36, 2, 0.1, 0.1], dtype=np.float32)
+        self.init_high = np.array([1, 0.0, 0., -0.5, 0., 0.], dtype=np.float32)
+        self.init_low = -np.array([1, 0.8, np.pi / 10, 1., 0., 0.], dtype=np.float32)
 
         self.context: RefTrajWithStaticObstacleContext = RefTrajWithStaticObstacleContext(
             pre_horizon=pre_horizon,
@@ -70,7 +70,7 @@ class Veh3DoFTrackingDetour(Veh3DoFTracking):
         veh_width = self.context.veh_width
         d = (veh_length - veh_width) / 2
         # circle radius
-        r = 0.5 * veh_width
+        r = 0.5 * veh_width * np.sqrt(2)
 
         ego_x, ego_y, ego_phi = self.robot.state[:3]
         ego_center = np.array(

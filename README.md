@@ -34,14 +34,23 @@ GOPS requires:
 4. The installation path must be in English.
 
 You can install GOPS through the following steps:
+1. clone GOPS repository
 ```bash
-# clone GOPS repository
 git clone https://github.com/Intelligent-Driving-Laboratory/GOPS.git
 cd GOPS
-# create conda environment
-conda env create -f gops_environment.yml
+```
+2. create conda environment depending on your OS:
+```bash
+conda env create -f gops_environment.nix.yml  # for Linux
 conda activate gops
-# install GOPS
+```
+or
+```bash
+conda env create -f gops_environment.win.yml  # for Windows
+conda activate gops
+```
+3. install GOPS
+```bash
 pip install -e .
 ```
 
