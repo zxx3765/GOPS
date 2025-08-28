@@ -1,0 +1,23 @@
+# Config version. DO NOT CHANGE.
+__version__ = "1.0.0"
+
+model = "quarter_sus_win"
+
+
+[simulink]
+    solver = "FixedStepAuto"
+    absolute_time = true
+    integer_code = false
+    non_finite = true
+    complex = false
+    continuous_time = true
+    variable_size_signal = true
+    non_inlined_sfcn = false
+[cpp]
+    class_name = "QuarterSusWin"
+    namespace = ""
+[info]
+    description = "<auto>"
+    version = "<auto>"
+    author = "<auto>"
+    license = "<no-license>"
