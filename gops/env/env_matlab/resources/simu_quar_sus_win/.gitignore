@@ -1,0 +1,11 @@
+*
+!quarter_sus_win
+!quartersuspension_env_2022
+!*.pyi
+!.gitignore
+!env.toml
+!model.toml
+!*.slx
+!*.m
+!*.bat
+!*.so
