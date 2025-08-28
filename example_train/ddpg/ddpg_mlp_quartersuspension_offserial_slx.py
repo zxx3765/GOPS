@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # Key Parameters for users
     parser.add_argument("--env_id", type=str, default="simu_quarter_sus_win", help="id of environment")
     # parser.add_argument("--env_id", type=str, default="simu_aircraftconti", help="id of environment")
-    parser.add_argument("--algorithm", type=str, default="DDPG", help="RL algorithm")
+    parser.add_argument("--algorithm", type=str, default="DDPGCustom", help="RL algorithm")
     parser.add_argument("--enable_cuda", default=True, help="Enable CUDA")
     parser.add_argument("--seed", default=2099945076, help="seed of random number generator")
 
@@ -129,6 +129,11 @@ if __name__ == "__main__":
     parser.add_argument("--gamma", type=float, default=0.999, help="Discount factor")
     parser.add_argument("--tau", type=float, default=0.01, help="Param for soft update of target network")
     parser.add_argument("--delay_update", type=int, default=100, help="Delay update steps for actor")
+    # Gradient clipping parameters
+
+    parser.add_argument("--gradient_clip_critic", type=float, default=10.0, help="Gradient clipping threshold for critic")
+    parser.add_argument("--gradient_clip_actor", type=float, default=10.0, help="Gradient clipping threshold for actor")
+    parser.add_argument("--use_gradient_norm", type=bool, default=True, help="Use gradient norm clipping instead of value clipping")
     ################################################
     # 4. Parameters for trainer
     parser.add_argument("--torch_threads", type=int, default=8,help="limit torch intra-op parallel threads num to {num} for saving computing resource.".format(num = 4))
