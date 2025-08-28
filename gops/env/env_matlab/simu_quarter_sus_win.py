@@ -41,8 +41,8 @@ class SimuQuarterSusWin(gym.Env,):
         self._state = None
 
         obs_low = self.obs_scale * np.array([-9999, -9999, -9999])
-        self.state_max = np.array([9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999],dtype=float)
-        self.state_min = -self.state_max
+        self.state_max = np.array(kwargs["init_state_max"], dtype=float)
+        self.state_min = np.array(kwargs["init_state_min"], dtype=float)
         self.observation_space = spaces.Box(obs_low, -obs_low)
         self.action_space = spaces.Box(
             -self.act_scale * self.act_max, self.act_scale * self.act_max,shape=(1,), dtype=float
@@ -70,10 +70,9 @@ class SimuQuarterSusWin(gym.Env,):
         self.road_type = kwargs["Road_Type"]
         self.road_type_dict = {"Sine": 1, "Chirp": 2, "Random": 3, "Bump": 4}
 
-        self.Q = np.array(kwargs["punish_Q"],dtype=float)
-        self.Q_dot = np.diag(np.array(kwargs["punish_Q_dot"], dtype=float))
-
         self.Q_flec = kwargs["punish_Q_flec"]
+        self.Q_acc_s = kwargs.get("punish_Q_acc_s", 0.0)
+        self.Q_acc_u = kwargs.get("punish_Q_acc_u", 0.0)
         self.R = kwargs["punish_R"]
         self.seed_gen,_ =seeding.np_random(self.road_seed)
 
@@ -97,24 +96,34 @@ class SimuQuarterSusWin(gym.Env,):
                 self._state = np.random.uniform(low=self.rand_low, high=self.rand_high)
             else:
                 self._state = np.array(init_state, dtype=np.float32)
-            self.env.model_class.InstP_quarter_sus_win_T.Cs = self.Cs
-            self.env.model_class.InstP_quarter_sus_win_T.Ks = self.Ks
-            self.env.model_class.InstP_quarter_sus_win_T.ms = self.Ms
-            self.env.model_class.InstP_quarter_sus_win_T.mu = self.Mu
-            self.env.model_class.InstP_quarter_sus_win_T.Kt = self.Kt
-            self.env.model_class.InstP_quarter_sus_win_T.G0 = self.G0
-            self.env.model_class.InstP_quarter_sus_win_T.f0 = self.f0
-            self.env.model_class.InstP_quarter_sus_win_T.u = self.u
-            self.env.model_class.InstP_quarter_sus_win_T.as_max = self.as_max
-            self.env.model_class.InstP_quarter_sus_win_T.deflec_max = self.deflec_max
+            self.env.model_class.quarter_sus_win_InstP.Cs = self.Cs
+            self.env.model_class.quarter_sus_win_InstP.Ks = self.Ks
+            self.env.model_class.quarter_sus_win_InstP.ms = self.Ms
+            self.env.model_class.quarter_sus_win_InstP.Cs = self.Cs
+            self.env.model_class.quarter_sus_win_InstP.Ks = self.Ks
+            self.env.model_class.quarter_sus_win_InstP.ms = self.Ms
+            self.env.model_class.quarter_sus_win_InstP.mu = self.Mu
+            self.env.model_class.quarter_sus_win_InstP.Kt = self.Kt
+            self.env.model_class.quarter_sus_win_InstP.G0 = self.G0
+            self.env.model_class.quarter_sus_win_InstP.f0 = self.f0
+            self.env.model_class.quarter_sus_win_InstP.u = self.u
+            # self.env.model_class.quarter_sus_win_InstP.as_max = self.as_max
+            # self.env.model_class.quarter_sus_win_InstP.deflec_max = self.deflec_max
             # self.env.model_class.InstP_quarter_sus_win_T.x_max[:] = self.state_max
             # self.env.model_class.InstP_quarter_sus_win_T.x_min[:] = self.state_min
-            
-            self.env.model_class.InstP_quarter_sus_win_T.road_seed  = self.seed_gen.uniform(low=0, high=10000)
-            self.env.model_class.InstP_quarter_sus_win_T.road_type = self.road_type_dict[self.road_type]
-            self.env.model_class.InstP_quarter_sus_win_T.Q_dot = self.Q_dot
-            self.env.model_class.InstP_quarter_sus_win_T.Q_flec = self.Q_flec
-            self.env.model_class.InstP_quarter_sus_win_T.punish_R = self.R
+            # 初始化状态
+            init_state_rand = self.rng.uniform(low=self.state_min, high=self.state_max)
+            self.env.model_class.quarter_sus_win_InstP.xs0 = init_state_rand[0]
+            self.env.model_class.quarter_sus_win_InstP.vs0 = init_state_rand[1]
+            self.env.model_class.quarter_sus_win_InstP.xu0 = init_state_rand[2]
+            self.env.model_class.quarter_sus_win_InstP.vu0 = init_state_rand[3]
+            # self.env.model_class.quarter_sus_win_InstP.road_seed  = self.seed_gen.uniform(low=0, high=10000)
+            self.env.model_class.quarter_sus_win_InstP.road_type = self.road_type_dict[self.road_type]
+            # self.env.model_class.quarter_sus_win_InstP.Q_dot = self.Q_dot
+            self.env.model_class.quarter_sus_win_InstP.Q_flec = self.Q_flec
+            self.env.model_class.quarter_sus_win_InstP.Q_dot_s = self.Q_acc_s
+            self.env.model_class.quarter_sus_win_InstP.Q_dot_u = self.Q_acc_u
+            # self.env.model_class.quarter_sus_win_InstP.punish_R = self.R
 
         # Reset takes an optional callback
         # This callback will be called after model & parameter initialization and before taking first step.

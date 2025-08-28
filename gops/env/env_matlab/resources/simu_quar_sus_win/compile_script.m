@@ -4,33 +4,33 @@
 clear;
 clc;
 curren_path = pwd;
-%获取当前文件夹下的文件
-files = dir(curren_path);
-%删除文件夹
-for i = 1:length(files)
-    if files(i).isdir == 1
-        if strcmp(files(i).name,'.') || strcmp(files(i).name,'..') || strcmp(files(i).name,'sim_Data')
-            continue;
-        end
-        rmdir(files(i).name,'s');
-    end
-end
+% %获取当前文件夹下的文件
+% files = dir(curren_path);
+% %删除文件夹
+% for i = 1:length(files)
+%     if files(i).isdir == 1
+%         if strcmp(files(i).name,'.') || strcmp(files(i).name,'..') || strcmp(files(i).name,'sim_Data')
+%             continue;
+%         end
+%         rmdir(files(i).name,'s');
+%     end
+% end
 %删除后缀为.h、.json、.c、.cc、.py、txt的文件和除了名字为model与env的.toml文件
 %保留setup_fixbug.py文件
-for i = 1:length(files)
-    if files(i).isdir == 0
-        % 检查是否为setup_fixbug.py文件，如果是则跳过
-        if strcmp(files(i).name, 'setup_fixbug.py')
-            continue;
-        end
-        if strcmp(files(i).name(end-1:end),'.h') || strcmp(files(i).name(end-4:end),'.json') || strcmp(files(i).name(end-1:end),'.c') || strcmp(files(i).name(end-2:end),'.cc') || strcmp(files(i).name(end-2:end),'.py') || strcmp(files(i).name(end-3:end),'.txt')
-            delete(files(i).name);
-        end
-        if strcmp(files(i).name,'model.toml') || strcmp(files(i).name,'env.toml')
-            continue;
-        end
-    end
-end
+% for i = 1:length(files)
+%     if files(i).isdir == 0
+%         % 检查是否为setup_fixbug.py文件，如果是则跳过
+%         if strcmp(files(i).name, 'setup_fixbug.py')
+%             continue;
+%         end
+%         if strcmp(files(i).name(end-1:end),'.h') || strcmp(files(i).name(end-4:end),'.json') || strcmp(files(i).name(end-1:end),'.c') || strcmp(files(i).name(end-2:end),'.cc') || strcmp(files(i).name(end-2:end),'.py') || strcmp(files(i).name(end-3:end),'.txt')
+%             delete(files(i).name);
+%         end
+%         if strcmp(files(i).name,'model.toml') || strcmp(files(i).name,'env.toml')
+%             continue;
+%         end
+%     end
+% end
 %调用slxpy setup_config
 slxpy.setup_config(curren_path);
 %调用slxpy codegen
@@ -69,9 +69,9 @@ for i = 1:length(files)
                     if strcmp(lib_files(j).name,'.') || strcmp(lib_files(j).name,'..')
                         continue;
                     end
-                    movefile([curren_path,'\build\',files(i).name,'\',lib_files(j).name],[curren_path,'\',lib_files(j).name]);
+                    copyfile([curren_path,'\build\',files(i).name,'\',lib_files(j).name],[curren_path,'\',lib_files(j).name]);
                 else
-                    movefile([curren_path,'\build\',files(i).name,'\',lib_files(j).name],[curren_path,'\',lib_files(j).name]);
+                    copyfile([curren_path,'\build\',files(i).name,'\',lib_files(j).name],[curren_path,'\',lib_files(j).name]);
                 end
             end
         end
