@@ -61,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--Cs", type=float, default=2000.0,help="damper coefficient")
     parser.add_argument("--Ks", type=float, default=20000.0,help="spring coefficient")
     parser.add_argument("--Ms", type=float, default=400.0,help="Sprung mass")
-    parser.add_argument("--Mu", type=float, default=50.0,help="Unsprung mass")
+    parser.add_argument("--Mu", type=float, default=40.0,help="Unsprung mass")
     parser.add_argument("--Kt", type=float, default=200000.0,help="Tire stiffness")
     parser.add_argument("--G0", type=float, default=0.001024,help="the random road") #Class A
     parser.add_argument("--f0", type=float, default=0.1)
@@ -69,13 +69,17 @@ if __name__ == "__main__":
     parser.add_argument("--as_max", type=float, default=1) #acc_s max 2m/s^2
     parser.add_argument("--deflec_max", type=float, default=0.04) #deflection max 40mm
     parser.add_argument("--road_seed", type=int, default=827538)
-    parser.add_argument("--Road_Type", type=str, default="Bump",help="Sine/Chirp/Random/Bump")
+    parser.add_argument("--Road_Type", type=str, default="Random",help="Sine/Chirp/Random/Bump")
 
-    parser.add_argument("--punish_Q", type=list, default=[10, 0.01, 30])
+    # 设置初始状态随机范围 顺序为xs0, vs0, xu0, vu0
+    parser.add_argument("--init_state_max", type=list, default=[0.01, 0.1, 0.01, 0.1])
+    parser.add_argument("--init_state_min", type=list, default=[-0.01, -0.1, -0.01, -0.1])
+
     # 代表accs 和 accu的惩罚权重
-    parser.add_argument("--punish_Q_dot", type=list, default=[-0.1, -0.001])
+    parser.add_argument("--punish_Q_acc_s", type=float, default=1.0)
+    parser.add_argument("--punish_Q_acc_u", type=float, default=0.001)
     # 代表deflection的惩罚权重
-    parser.add_argument("--punish_Q_flec", type=list, default=[0.0])
+    parser.add_argument("--punish_Q_flec", type=float, default=2.5)
     parser.add_argument("--punish_R", type=float, default=0.00001)
     ################################################
     # 2.1 Parameters of value approximate function
@@ -132,7 +136,7 @@ if __name__ == "__main__":
     # Gradient clipping parameters
 
     parser.add_argument("--gradient_clip_critic", type=float, default=10.0, help="Gradient clipping threshold for critic")
-    parser.add_argument("--gradient_clip_actor", type=float, default=10.0, help="Gradient clipping threshold for actor")
+    parser.add_argument("--gradient_clip_actor", type=float, default=1.0, help="Gradient clipping threshold for actor")
     parser.add_argument("--use_gradient_norm", type=bool, default=True, help="Use gradient norm clipping instead of value clipping")
     ################################################
     # 4. Parameters for trainer
@@ -144,7 +148,7 @@ if __name__ == "__main__":
         help="Options: on_serial_trainer, on_sync_trainer, off_serial_trainer, off_async_trainer",
     )
     # Maximum iteration number
-    parser.add_argument("--max_iteration", type=int, default=1000000)
+    parser.add_argument("--max_iteration", type=int, default=100000)
     trainer_type = parser.parse_known_args()[0].trainer
     parser.add_argument(
         "--ini_network_dir",
