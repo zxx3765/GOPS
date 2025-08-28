@@ -162,3 +162,6 @@ dmypy.json
 
 # experiment file
 experiment
+# claude
+.claude/
+CLAUDE.md
