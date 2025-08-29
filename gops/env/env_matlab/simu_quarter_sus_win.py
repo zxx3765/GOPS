@@ -40,7 +40,7 @@ class SimuQuarterSusWin(gym.Env,):
         # self.ref_horizon = kwargs["ref_horizon"]
         self._state = None
 
-        obs_low = self.obs_scale * np.array([-9999, -9999, -9999])
+        obs_low = self.obs_scale * np.array([-9999, -9999, -9999, -9999])
         self.state_max = np.array(kwargs["init_state_max"], dtype=float)
         self.state_min = np.array(kwargs["init_state_min"], dtype=float)
         self.observation_space = spaces.Box(obs_low, -obs_low)
@@ -122,7 +122,7 @@ class SimuQuarterSusWin(gym.Env,):
             # self.env.model_class.quarter_sus_win_InstP.Q_dot = self.Q_dot
             self.env.model_class.quarter_sus_win_InstP.Q_flec = self.Q_flec
             self.env.model_class.quarter_sus_win_InstP.Q_dot_s = self.Q_acc_s
-            self.env.model_class.quarter_sus_win_InstP.Q_dot_u = self.Q_acc_u
+            # self.env.model_class.quarter_sus_win_InstP.Q_dot_u = self.Q_acc_u
             # self.env.model_class.quarter_sus_win_InstP.punish_R = self.R
 
         # Reset takes an optional callback
@@ -160,8 +160,9 @@ class SimuQuarterSusWin(gym.Env,):
         
         obs = np.zeros(self.observation_space.shape)
         obs[0] = state[0] #acc_s
-        obs[1] = state[1] #acc_u
+        obs[1] = state[1] #vs
         obs[2] = state[2]#suspension_deflection
+        obs[3] = state[3]#v_def
         obs = obs / self.obs_scale
         return obs
 
