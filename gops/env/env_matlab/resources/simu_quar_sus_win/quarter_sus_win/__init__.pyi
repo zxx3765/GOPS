@@ -184,7 +184,7 @@ class QuarterSusWin:
         def vu(self, arg0: typing.SupportsFloat) -> None:
             ...
     class DW_quarter_sus_win_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype([('Memory_PreviousInput', '<f8'), ('NextOutput', '<f8'), ('RandSeed', '<u4'), ('xs0_DWORK1', '?'), ('xu0_DWORK1', '?'), ('vs0_DWORK1', '?'), ('vu0_DWORK1', '?')])
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype([('Memory1_PreviousInput', '<f8'), ('NextOutput', '<f8'), ('RandSeed', '<u4'), ('xs0_DWORK1', '?'), ('xu0_DWORK1', '?'), ('vs0_DWORK1', '?'), ('vu0_DWORK1', '?')])
         vs0_DWORK1: bool
         vu0_DWORK1: bool
         xs0_DWORK1: bool
@@ -200,10 +200,10 @@ class QuarterSusWin:
         def numpy(self) -> numpy.typing.NDArray[QuarterSusWin.DW_quarter_sus_win_T]:
             ...
         @property
-        def Memory_PreviousInput(self) -> float:
+        def Memory1_PreviousInput(self) -> float:
             ...
-        @Memory_PreviousInput.setter
-        def Memory_PreviousInput(self, arg0: typing.SupportsFloat) -> None:
+        @Memory1_PreviousInput.setter
+        def Memory1_PreviousInput(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def NextOutput(self) -> float:
@@ -267,7 +267,7 @@ class QuarterSusWin:
         def rew(self, arg0: typing.SupportsFloat) -> None:
             ...
     class InstP_quarter_sus_win_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['Cs', 'G0', 'Ks', 'Kt', 'Q_F', 'Q_dot_s', 'Q_flec', 'Q_flec_t', 'a_max', 'a_min', 'b_deflec', 'bump_height', 'bump_lenth', 'bump_start', 'f0', 'ms', 'mu', 'omega_1', 'omega_2', 'omega_3', 'sine_amp', 'sine_freq', 'u', 'vs0', 'vu0', 'xs0', 'xu0', 'road_type'], 'formats': ['<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', 'i1'], 'offsets': [0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216], 'itemsize': 224})
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['Cs', 'G0', 'Ks', 'Kt', 'Q_F', 'Q_dot_s', 'Q_dot_s_h', 'Q_flec', 'Q_flec_t', 'a_max', 'a_min', 'b_deflec', 'bump_height', 'bump_lenth', 'bump_start', 'f0', 'ms', 'mu', 'omega_1', 'omega_2', 'omega_3', 'omega_4', 'sine_amp', 'sine_freq', 'u', 'vs0', 'vu0', 'xs0', 'xu0', 'road_type'], 'formats': ['<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', 'i1'], 'offsets': [0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232], 'itemsize': 240})
         def __copy__(self) -> QuarterSusWin.InstP_quarter_sus_win_T:
             ...
         def __deepcopy__(self, memo: dict) -> QuarterSusWin.InstP_quarter_sus_win_T:
@@ -313,6 +313,12 @@ class QuarterSusWin:
             ...
         @Q_dot_s.setter
         def Q_dot_s(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def Q_dot_s_h(self) -> float:
+            ...
+        @Q_dot_s_h.setter
+        def Q_dot_s_h(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def Q_flec(self) -> float:
@@ -397,6 +403,12 @@ class QuarterSusWin:
             ...
         @omega_3.setter
         def omega_3(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def omega_4(self) -> float:
+            ...
+        @omega_4.setter
+        def omega_4(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def road_type(self) -> int:
@@ -576,4 +588,4 @@ class RawEnvVec:
     def step(self, action: numpy.typing.NDArray[QuarterSusWin.ExtU_quarter_sus_win_T], indices: numpy.typing.NDArray[numpy.int64]) -> numpy.typing.NDArray[QuarterSusWin.ExtY_quarter_sus_win_T]:
         ...
 __author__: str = 'hjzsj'
-__version__: str = '15.71'
+__version__: str = '15.77'
