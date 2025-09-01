@@ -9,3 +9,4 @@
 !*.m
 !*.bat
 !*.so
+!setup_fixbug.py
