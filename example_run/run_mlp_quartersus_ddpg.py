@@ -9,20 +9,20 @@
 #  Description: run a closed-loop system
 #  Update: 2022-12-05, Congsheng Zhang: create file
 
-
-from gops.sys_simulator.sys_run import PolicyRunner
+import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+from gops.sys_simulator.PolicyRunnerCustom import PolicyRunnerCustom
 import numpy as np
 result_path = "D:/Project/GOPS/results/simu_quarter_sus_win/"
-runner = PolicyRunner(
-    log_policy_dir_list=[result_path+"DDPG_250827-150043",
-                         result_path+"DDPG_250827-150043",
-                         result_path+"DDPG_250827-150043",],
-    trained_policy_iteration_list=["51220_opt","67500",'77000'],
+runner = PolicyRunnerCustom(
+    log_policy_dir_list=[
+                         result_path+"DDPGCustom_250831-080656",],
+    trained_policy_iteration_list=['409000_opt',],
     is_init_info=True,
-    init_info={"init_state": [0.0, 0.0, 0.0], "ref_time": 0.0,
+    init_info={"init_state": [0.0, 0.0, 0.0, 0.0], "ref_time": 0.0,
                "ref_num": 3}, # ref_num = [0, 1, 2,..., 7]
     save_render=False,
-    legend_list=["51220_opt","67500",'77000'],
+    legend_list=["409000_opt"],
     opt_args={
         "opt_controller_type": "OPT",
         "num_pred_step": 10,
