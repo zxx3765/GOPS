@@ -12,7 +12,7 @@ __all__: tuple = ('RawEnv', 'RawEnvVec', 'GymEnv', 'GymEnvVec', 'QuarterSusWin')
 class GymEnv:
     action_space: typing.ClassVar[gymnasium.spaces.box.Box]  # value = Box(0.0, 1.0, (1,), float64)
     metadata: typing.ClassVar[dict] = {'render.modes': list()}
-    observation_space: typing.ClassVar[gymnasium.spaces.box.Box]  # value = Box(0.0, 1.0, (3,), float64)
+    observation_space: typing.ClassVar[gymnasium.spaces.box.Box]  # value = Box(0.0, 1.0, (4,), float64)
     reward_range: typing.ClassVar[tuple]  # value = (-inf, inf)
     def __enter__(self) -> typing.Any:
         ...
@@ -47,7 +47,7 @@ class GymEnvVec:
     metadata: typing.ClassVar[dict] = {'render.modes': list()}
     reward_range: typing.ClassVar[dict] = {'render.modes': list()}
     single_action_space: typing.ClassVar[gymnasium.spaces.box.Box]  # value = Box(0.0, 1.0, (1,), float64)
-    single_observation_space: typing.ClassVar[gymnasium.spaces.box.Box]  # value = Box(0.0, 1.0, (3,), float64)
+    single_observation_space: typing.ClassVar[gymnasium.spaces.box.Box]  # value = Box(0.0, 1.0, (4,), float64)
     def __enter__(self) -> typing.Any:
         ...
     def __exit__(self, arg0: typing.Any, arg1: typing.Any, arg2: typing.Any) -> bool:
@@ -100,7 +100,7 @@ class GymEnvVec:
         ...
 class QuarterSusWin:
     class B_quarter_sus_win_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype([('Constant', '<f8'), ('Constant3', '<f8'), ('Constant1', '<f8'), ('vs', '<f8'), ('Constant2', '<f8'), ('vu', '<f8'), ('Gain3', '<f8'), ('as', '<f8'), ('au', '<f8'), ('Gain_epcx', '<f8'), ('Add', '<f8')])
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype([('Constant', '<f8'), ('Constant3', '<f8'), ('Constant1', '<f8'), ('vs', '<f8'), ('Constant2', '<f8'), ('vu', '<f8'), ('Gain3', '<f8'), ('Saturation2', '<f8'), ('as', '<f8'), ('au', '<f8'), ('Gain_epcx', '<f8'), ('Add', '<f8')])
         def __copy__(self) -> QuarterSusWin.B_quarter_sus_win_T:
             ...
         def __deepcopy__(self, memo: dict) -> QuarterSusWin.B_quarter_sus_win_T:
@@ -154,6 +154,12 @@ class QuarterSusWin:
         def Gain_epcx(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
+        def Saturation2(self) -> float:
+            ...
+        @Saturation2.setter
+        def Saturation2(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
         def as(self) -> float:
             ...
         @as.setter
@@ -178,7 +184,7 @@ class QuarterSusWin:
         def vu(self, arg0: typing.SupportsFloat) -> None:
             ...
     class DW_quarter_sus_win_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype([('NextOutput', '<f8'), ('RandSeed', '<u4'), ('xs0_DWORK1', '?'), ('xu0_DWORK1', '?'), ('vs0_DWORK1', '?'), ('vu0_DWORK1', '?')])
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype([('Memory1_PreviousInput', '<f8'), ('NextOutput', '<f8'), ('RandSeed', '<u4'), ('xs0_DWORK1', '?'), ('xu0_DWORK1', '?'), ('vs0_DWORK1', '?'), ('vu0_DWORK1', '?')])
         vs0_DWORK1: bool
         vu0_DWORK1: bool
         xs0_DWORK1: bool
@@ -192,6 +198,12 @@ class QuarterSusWin:
         def __repr__(self) -> str:
             ...
         def numpy(self) -> numpy.typing.NDArray[QuarterSusWin.DW_quarter_sus_win_T]:
+            ...
+        @property
+        def Memory1_PreviousInput(self) -> float:
+            ...
+        @Memory1_PreviousInput.setter
+        def Memory1_PreviousInput(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def NextOutput(self) -> float:
@@ -224,7 +236,7 @@ class QuarterSusWin:
         def Action(self, arg0: typing.SupportsFloat) -> None:
             ...
     class ExtY_quarter_sus_win_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['obs', 'rew', 'done', 'info', 'act_real'], 'formats': [('<f8', (3,)), '<f8', '?', ('<f8', (8,)), '<f8'], 'offsets': [0, 24, 32, 40, 104], 'itemsize': 112})
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['obs', 'rew', 'done', 'info', 'act_real'], 'formats': [('<f8', (4,)), '<f8', '?', ('<f8', (8,)), '<f8'], 'offsets': [0, 32, 40, 48, 112], 'itemsize': 120})
         done: bool
         def __copy__(self) -> QuarterSusWin.ExtY_quarter_sus_win_T:
             ...
@@ -255,7 +267,7 @@ class QuarterSusWin:
         def rew(self, arg0: typing.SupportsFloat) -> None:
             ...
     class InstP_quarter_sus_win_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['Cs', 'G0', 'Ks', 'Kt', 'Q_dot_s', 'Q_dot_u', 'Q_flec', 'a_max', 'a_min', 'b_deflec', 'bump_height', 'bump_lenth', 'bump_start', 'f0', 'ms', 'mu', 'sine_amp', 'sine_freq', 'u', 'vs0', 'vu0', 'xs0', 'xu0', 'road_type'], 'formats': ['<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', 'i1'], 'offsets': [0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184], 'itemsize': 192})
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['Cs', 'G0', 'Ks', 'Kt', 'Q_F', 'Q_dot_s', 'Q_dot_s_h', 'Q_flec', 'Q_flec_t', 'a_max', 'a_min', 'b_deflec', 'bump_height', 'bump_lenth', 'bump_start', 'f0', 'ms', 'mu', 'omega_1', 'omega_2', 'omega_3', 'omega_4', 'sine_amp', 'sine_freq', 'u', 'vs0', 'vu0', 'xs0', 'xu0', 'road_type'], 'formats': ['<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', 'i1'], 'offsets': [0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232], 'itemsize': 240})
         def __copy__(self) -> QuarterSusWin.InstP_quarter_sus_win_T:
             ...
         def __deepcopy__(self, memo: dict) -> QuarterSusWin.InstP_quarter_sus_win_T:
@@ -291,22 +303,34 @@ class QuarterSusWin:
         def Kt(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
+        def Q_F(self) -> float:
+            ...
+        @Q_F.setter
+        def Q_F(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
         def Q_dot_s(self) -> float:
             ...
         @Q_dot_s.setter
         def Q_dot_s(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
-        def Q_dot_u(self) -> float:
+        def Q_dot_s_h(self) -> float:
             ...
-        @Q_dot_u.setter
-        def Q_dot_u(self, arg0: typing.SupportsFloat) -> None:
+        @Q_dot_s_h.setter
+        def Q_dot_s_h(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def Q_flec(self) -> float:
             ...
         @Q_flec.setter
         def Q_flec(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def Q_flec_t(self) -> float:
+            ...
+        @Q_flec_t.setter
+        def Q_flec_t(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def a_max(self) -> float:
@@ -361,6 +385,30 @@ class QuarterSusWin:
             ...
         @mu.setter
         def mu(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def omega_1(self) -> float:
+            ...
+        @omega_1.setter
+        def omega_1(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def omega_2(self) -> float:
+            ...
+        @omega_2.setter
+        def omega_2(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def omega_3(self) -> float:
+            ...
+        @omega_3.setter
+        def omega_3(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def omega_4(self) -> float:
+            ...
+        @omega_4.setter
+        def omega_4(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def road_type(self) -> int:
@@ -540,4 +588,4 @@ class RawEnvVec:
     def step(self, action: numpy.typing.NDArray[QuarterSusWin.ExtU_quarter_sus_win_T], indices: numpy.typing.NDArray[numpy.int64]) -> numpy.typing.NDArray[QuarterSusWin.ExtY_quarter_sus_win_T]:
         ...
 __author__: str = 'hjzsj'
-__version__: str = '15.57'
+__version__: str = '15.77'

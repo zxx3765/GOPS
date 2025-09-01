@@ -12,6 +12,7 @@ GUI版本的GOPS策略ONNX导出工具
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 from py2onnx import Py2ONNXRunner
 
 class ONNXExportGUI:
@@ -131,7 +132,7 @@ class ONNXExportGUI:
         """浏览保存路径"""
         directory = filedialog.askdirectory(
             title="选择保存目录",
-            initialdir=r"D:\Project\SynologyDrive\imp_fcn_cal\RL_model" if os.path.exists(r"D:\Project\SynologyDrive\imp_fcn_cal\RL_model") else "/"
+            initialdir=r"D:\Project\GOPS\mdl\RL_model" if os.path.exists(r"D:\Project\GOPS\mdl\RL_model") else "/"
         )
         if directory:
             self.save_path.set(directory)

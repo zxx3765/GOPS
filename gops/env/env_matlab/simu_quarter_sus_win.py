@@ -40,7 +40,7 @@ class SimuQuarterSusWin(gym.Env,):
         # self.ref_horizon = kwargs["ref_horizon"]
         self._state = None
 
-        obs_low = self.obs_scale * np.array([-9999, -9999, -9999])
+        obs_low = self.obs_scale * np.array([-9999, -9999, -9999, -9999])
         self.state_max = np.array(kwargs["init_state_max"], dtype=float)
         self.state_min = np.array(kwargs["init_state_min"], dtype=float)
         self.observation_space = spaces.Box(obs_low, -obs_low)
@@ -72,8 +72,12 @@ class SimuQuarterSusWin(gym.Env,):
 
         self.Q_flec = kwargs["punish_Q_flec"]
         self.Q_acc_s = kwargs.get("punish_Q_acc_s", 0.0)
-        self.Q_acc_u = kwargs.get("punish_Q_acc_u", 0.0)
-        self.R = kwargs["punish_R"]
+        # self.Q_acc_u = kwargs.get("punish_Q_acc_u", 0.0)
+        self.Q_F = kwargs.get("punish_Q_F", 0.0)
+        self.Q_flec_t = kwargs.get("punish_Q_flec_t", 0.0)
+        self.b_deflec = kwargs.get("punish_b_deflec", 0.0)
+        self.Q_acc_s_h = kwargs.get("punish_Q_acc_s_h", 0.0)
+        # self.R = kwargs["punish_R"]
         self.seed_gen,_ =seeding.np_random(self.road_seed)
 
         self.rand_low = np.array(self.rand_center) - np.array(self.rand_bias)
@@ -88,14 +92,25 @@ class SimuQuarterSusWin(gym.Env,):
     def reset(
         self, init_state: Optional[Sequence] = None, **kwargs: Any
     ) -> Tuple[np.ndarray]:
-        def callback():
+        def callback(init_state):
             """Custom reset logic goes here."""
             # Modify your parameter
             # e.g. self.env.model_class.foo_InstP.your_parameter
             if init_state is None:
                 self._state = np.random.uniform(low=self.rand_low, high=self.rand_high)
+                init_state_rand = self.rng.uniform(low=self.state_min, high=self.state_max)
+                self.env.model_class.quarter_sus_win_InstP.xs0 = init_state_rand[0]
+                self.env.model_class.quarter_sus_win_InstP.vs0 = init_state_rand[1]
+                self.env.model_class.quarter_sus_win_InstP.xu0 = init_state_rand[2]
+                self.env.model_class.quarter_sus_win_InstP.vu0 = init_state_rand[3]
             else:
                 self._state = np.array(init_state, dtype=np.float32)
+                init_state = self._state
+                self.env.model_class.quarter_sus_win_InstP.xs0 = init_state[0]
+                self.env.model_class.quarter_sus_win_InstP.vs0 = init_state[1]
+                self.env.model_class.quarter_sus_win_InstP.xu0 = init_state[2]
+                self.env.model_class.quarter_sus_win_InstP.vu0 = init_state[3]
+
             self.env.model_class.quarter_sus_win_InstP.Cs = self.Cs
             self.env.model_class.quarter_sus_win_InstP.Ks = self.Ks
             self.env.model_class.quarter_sus_win_InstP.ms = self.Ms
@@ -112,22 +127,22 @@ class SimuQuarterSusWin(gym.Env,):
             # self.env.model_class.InstP_quarter_sus_win_T.x_max[:] = self.state_max
             # self.env.model_class.InstP_quarter_sus_win_T.x_min[:] = self.state_min
             # 初始化状态
-            init_state_rand = self.rng.uniform(low=self.state_min, high=self.state_max)
-            self.env.model_class.quarter_sus_win_InstP.xs0 = init_state_rand[0]
-            self.env.model_class.quarter_sus_win_InstP.vs0 = init_state_rand[1]
-            self.env.model_class.quarter_sus_win_InstP.xu0 = init_state_rand[2]
-            self.env.model_class.quarter_sus_win_InstP.vu0 = init_state_rand[3]
+            
             # self.env.model_class.quarter_sus_win_InstP.road_seed  = self.seed_gen.uniform(low=0, high=10000)
             self.env.model_class.quarter_sus_win_InstP.road_type = self.road_type_dict[self.road_type]
             # self.env.model_class.quarter_sus_win_InstP.Q_dot = self.Q_dot
             self.env.model_class.quarter_sus_win_InstP.Q_flec = self.Q_flec
+            self.env.model_class.quarter_sus_win_InstP.b_deflec = self.b_deflec
             self.env.model_class.quarter_sus_win_InstP.Q_dot_s = self.Q_acc_s
-            self.env.model_class.quarter_sus_win_InstP.Q_dot_u = self.Q_acc_u
+            self.env.model_class.quarter_sus_win_InstP.Q_F = self.Q_F
+            self.env.model_class.quarter_sus_win_InstP.Q_flec_t = self.Q_flec_t
+            self.env.model_class.quarter_sus_win_InstP.Q_dot_s_h = self.Q_acc_s_h
+            # self.env.model_class.quarter_sus_win_InstP.Q_dot_u = self.Q_acc_u
             # self.env.model_class.quarter_sus_win_InstP.punish_R = self.R
 
         # Reset takes an optional callback
         # This callback will be called after model & parameter initialization and before taking first step.
-        state,info = self.env.reset(preinit=callback)
+        state,info = self.env.reset(preinit=callback(init_state))
         # state = self.reset.callback()
         obs = self.postprocess(state)
         return obs
@@ -160,8 +175,9 @@ class SimuQuarterSusWin(gym.Env,):
         
         obs = np.zeros(self.observation_space.shape)
         obs[0] = state[0] #acc_s
-        obs[1] = state[1] #acc_u
+        obs[1] = state[1] #vs
         obs[2] = state[2]#suspension_deflection
+        obs[3] = state[3]#v_def
         obs = obs / self.obs_scale
         return obs
 

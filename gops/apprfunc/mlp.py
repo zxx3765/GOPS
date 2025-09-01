@@ -23,6 +23,7 @@ __all__ = [
     "ActionValueDistri",
     "StochaPolicyDis",
     "StateValue",
+    "ActionValueCustom",
 ]
 
 import numpy as np
@@ -269,6 +270,35 @@ class ActionValue(nn.Module, Action_Distribution):
 
     def forward(self, obs, act):
         q = self.q(torch.cat([obs, act], dim=-1))
+        return torch.squeeze(q, -1)
+    
+class ActionValueCustom(nn.Module, Action_Distribution):
+    """
+    Approximated function of action-value function.
+    Input: observation, action.
+    Output: action-value.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        obs_dim = kwargs["obs_dim"]
+        act_dim = kwargs["act_dim"]
+        hidden_sizes = kwargs["hidden_sizes"]
+        self.q1 = mlp(
+            [obs_dim] + [128] + [200-act_dim],
+            get_activation_func(kwargs["hidden_activation"]),
+            get_activation_func(kwargs["hidden_activation"]),
+        )
+        self.action_distribution_cls = kwargs["action_distribution_cls"]
+        self.q2 = mlp(
+            [200] + [1],
+            get_activation_func(kwargs["hidden_activation"]),
+            get_activation_func(kwargs["output_activation"]),
+        )
+    def forward(self, obs, act):
+        q = self.q1(obs)
+        q = torch.cat([q, act], dim=-1)
+        q = self.q2(q)
         return torch.squeeze(q, -1)
 
 
