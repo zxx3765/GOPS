@@ -189,3 +189,115 @@ class PolicyRunnerCustom(PolicyRunner):
             self.eval_list.append(eval_dict_opt)
             if self.is_tracking:
                 self.tracking_list.append(tracking_dict_opt)
+    
+    def draw(self):
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import pandas as pd
+        from gops.utils.plot_evaluation import cm2inch
+        
+        # Import default config from parent module
+        from gops.sys_simulator.sys_run import default_cfg
+        
+        fig_size = (
+            default_cfg["fig_size"],
+            default_cfg["fig_size"],
+        )
+        action_dim = self.eval_list[0]["action_list"][0].shape[0]
+        state_dim = self.eval_list[0]["state_list"][0].shape[0]
+        if self.constrained_env:
+            constrain_dim = self.eval_list[0]["constrain_list"][0].shape[0]
+        policy_num = len(self.algorithm_list)
+        if self.use_opt:
+            legend = ""
+            policy_num += 1
+            if self.opt_args["opt_controller_type"] == "OPT":
+                legend = "OPT"
+            elif self.opt_args["opt_controller_type"] == "MPC":
+                legend = "MPC-" + str(self.opt_args["num_pred_step"])
+                if (
+                    "use_terminal_cost" not in self.opt_args.keys()
+                    or self.opt_args["use_terminal_cost"] is False
+                ):
+                    legend += " (w/o TC)"
+                else:
+                    legend += " (w/ TC)"
+            self.algorithm_list.append(legend)
+
+        # Create initial list
+        reward_list = []
+        action_list = []
+        state_list = []
+        step_list = []
+        state_ref_error_list = []
+        constrain_list = []
+        # Put data into list
+        for i in range(policy_num):
+            reward_list.append(np.array(self.eval_list[i]["reward_list"]))
+            action_list.append(np.array(self.eval_list[i]["action_list"]))
+            state_list.append(np.array(self.eval_list[i]["state_list"]))
+            step_list.append(np.array(self.eval_list[i]["step_list"]))
+            if self.constrained_env:
+                constrain_list.append(np.stack(self.eval_list[i]["constrain_list"]))
+            if self.is_tracking:
+                state_ref_error_list.append(self.tracking_list[i])
+
+        if self.plot_range is None:
+            pass
+        elif len(self.plot_range) == 2:
+            for i in range(policy_num):
+                start_range = self.plot_range[0]
+                end_range = min(self.plot_range[1], reward_list[i].shape[0])
+
+                reward_list[i] = reward_list[i][start_range:end_range]
+                action_list[i] = action_list[i][start_range:end_range]
+                state_list[i] = state_list[i][start_range:end_range]
+                step_list[i] = step_list[i][start_range:end_range]
+                if self.constrained_env:
+                    constrain_list[i] = constrain_list[i][start_range:end_range]
+                if self.is_tracking:
+                    for key, value in self.tracking_list[i].items():
+                        self.tracking_list[i][key] = value[start_range:end_range]
+        else:
+            raise NotImplementedError("Figure range is wrong")
+
+        if self.dt is None:
+            x_label = "Time step"
+        else:
+            step_list = [s * self.dt for s in step_list]
+            x_label = "Time (s)"
+
+        # Plot cumulative reward (NEW PLOT)
+        path_cumulative_reward_fmt = os.path.join(
+            self.save_path, "Cumulative_Reward.{}".format(default_cfg["img_fmt"])
+        )
+        fig, ax = plt.subplots(figsize=cm2inch(*fig_size), dpi=default_cfg["dpi"])
+
+        # Calculate and save cumulative reward data
+        cumulative_reward_list = []
+        for i in range(policy_num):
+            cumulative_reward = np.cumsum(reward_list[i])
+            cumulative_reward_list.append(cumulative_reward)
+            
+        cumulative_reward_data = pd.DataFrame(data=cumulative_reward_list)
+        cumulative_reward_data.to_csv(os.path.join(self.save_path, "Cumulative_Reward.csv"), encoding="gbk")
+
+        for i in range(policy_num):
+            legend = (
+                self.legend_list[i]
+                if len(self.legend_list) == policy_num
+                else self.algorithm_list[i]
+            )
+            sns.lineplot(x=step_list[i], y=cumulative_reward_list[i], label="{}".format(legend))
+        plt.tick_params(labelsize=default_cfg["tick_size"])
+        labels = ax.get_xticklabels() + ax.get_yticklabels()
+        [label.set_fontname(default_cfg["tick_label_font"]) for label in labels]
+        plt.xlabel(x_label, default_cfg["label_font"])
+        plt.ylabel("Cumulative Reward", default_cfg["label_font"])
+        plt.legend(loc="best", prop=default_cfg["legend_font"])
+        fig.tight_layout(pad=default_cfg["pad"])
+        plt.savefig(path_cumulative_reward_fmt, format=default_cfg["img_fmt"], bbox_inches="tight")
+        plt.close()
+
+        # Call parent draw method for all other plots
+        super().draw()
