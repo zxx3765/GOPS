@@ -9,10 +9,13 @@
 #  Description: example for ppo + veh3dofconti + mlp + on_serial
 #  Update Date: 2021-06-11, Li Jie: create example
 
-
+import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 import argparse
 import os
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend to prevent access violations
 
 from gops.create_pkg.create_alg import create_alg
 from gops.create_pkg.create_buffer import create_buffer
@@ -35,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument("--env_id", type=str, default="simu_quarter_sus_win", help="id of environment")
     # parser.add_argument("--env_id", type=str, default="simu_aircraftconti", help="id of environment")
     parser.add_argument("--algorithm", type=str, default="DDPGCustom", help="RL algorithm")
-    parser.add_argument("--enable_cuda", default=True, help="Enable CUDA")
+    parser.add_argument("--enable_cuda", default=False, help="Enable CUDA")
     parser.add_argument("--seed", default=2099945076, help="seed of random number generator")
 
     ################################################
@@ -47,7 +50,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--Max_step", type=int, default=2000, help="Maximum step of each episode")
     parser.add_argument("--act_repeat", type=int, default=10)
-    parser.add_argument("--obs_scaling", type=list, default=[1, 1, 0.03])
+    parser.add_argument("--obs_scaling", type=list, default=[1, 1, 0.03,0.3])
     parser.add_argument("--act_scaling", type=float, default=0.01)
     parser.add_argument("--act_max", type=float, default=400)
     parser.add_argument("--punish_done", type=float, default=0.0)
@@ -63,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("--Ms", type=float, default=400.0,help="Sprung mass")
     parser.add_argument("--Mu", type=float, default=40.0,help="Unsprung mass")
     parser.add_argument("--Kt", type=float, default=200000.0,help="Tire stiffness")
-    parser.add_argument("--G0", type=float, default=0.001024,help="the random road") #Class A
+    parser.add_argument("--G0", type=float, default=0.000256,help="the random road") #Class A
     parser.add_argument("--f0", type=float, default=0.1)
     parser.add_argument("--u", type=float, default=20.0)
     parser.add_argument("--as_max", type=float, default=1) #acc_s max 2m/s^2
@@ -76,23 +79,27 @@ if __name__ == "__main__":
     parser.add_argument("--init_state_min", type=list, default=[-0.01, -0.1, -0.01, -0.1])
 
     # 代表accs 和 accu的惩罚权重
-    parser.add_argument("--punish_Q_acc_s", type=float, default=1.0)
-    parser.add_argument("--punish_Q_acc_u", type=float, default=0.001)
+    parser.add_argument("--punish_Q_acc_s", type=float, default=0.7)
+    # parser.add_argument("--punish_Q_acc_u", type=float, default=0.1)
     # 代表deflection的惩罚权重
-    parser.add_argument("--punish_Q_flec", type=float, default=2.5)
-    parser.add_argument("--punish_R", type=float, default=0.00001)
+    parser.add_argument("--punish_b_deflec", type=float, default=0.04)
+    parser.add_argument("--punish_Q_flec", type=float, default=0.1)
+    parser.add_argument("--punish_Q_F", type=float, default=0.1)
+    parser.add_argument("--punish_Q_flec_t", type=float, default=0.1)
+    parser.add_argument("--punish_Q_acc_s_h", type=float, default=0.25)
+    # parser.add_argument("--punish_R", type=float, default=0.00001)
     ################################################
     # 2.1 Parameters of value approximate function
     # Options: StateValue/ActionValue/ActionValueDis
     parser.add_argument(
         "--value_func_name",
         type=str,
-        default="ActionValue",
+        default="ActionValueCustom", # 自定义的Critc网络
         help="Options: StateValue/ActionValue/ActionValueDis/ActionValueDistri",
     )
     parser.add_argument("--value_func_type", type=str, default="MLP", help="Options: MLP/CNN/CNN_SHARED/RNN/POLY/GAUSS")
     value_func_type = parser.parse_known_args()[0].value_func_type
-    parser.add_argument("--value_hidden_sizes", type=list, default=[32,64,64,32,16])
+    parser.add_argument("--value_hidden_sizes", type=list, default=[128,200])
     parser.add_argument(
         "--value_hidden_activation", type=str, default="relu", help="Options: relu/gelu/elu/selu/sigmoid/tanh"
     )
@@ -116,7 +123,7 @@ if __name__ == "__main__":
         help="Options: default/TanhGaussDistribution/GaussDistribution",
     )
     policy_func_type = parser.parse_known_args()[0].policy_func_type
-    parser.add_argument("--policy_hidden_sizes", type=list, default=[32,64,32,16])
+    parser.add_argument("--policy_hidden_sizes", type=list, default=[128,200])
     parser.add_argument(
         "--policy_hidden_activation", type=str, default="relu", help="Options: relu/gelu/elu/selu/sigmoid/tanh"
     )
@@ -127,8 +134,8 @@ if __name__ == "__main__":
     ################################################
     # 3. Parameters for algorithm
 
-    parser.add_argument("--value_learning_rate", type=float, default=1e-6, help="3e-4 in the paper")
-    parser.add_argument("--policy_learning_rate", type=float, default=3e-5)
+    parser.add_argument("--value_learning_rate", type=float, default=5e-5, help="3e-4 in the paper")
+    parser.add_argument("--policy_learning_rate", type=float, default=5e-4)
 
     parser.add_argument("--gamma", type=float, default=0.999, help="Discount factor")
     parser.add_argument("--tau", type=float, default=0.01, help="Param for soft update of target network")
@@ -148,7 +155,7 @@ if __name__ == "__main__":
         help="Options: on_serial_trainer, on_sync_trainer, off_serial_trainer, off_async_trainer",
     )
     # Maximum iteration number
-    parser.add_argument("--max_iteration", type=int, default=100000)
+    parser.add_argument("--max_iteration", type=int, default=500000)
     trainer_type = parser.parse_known_args()[0].trainer
     parser.add_argument(
         "--ini_network_dir",
@@ -157,12 +164,13 @@ if __name__ == "__main__":
     )
 
     # Batch size of replay samples from buffer
-    parser.add_argument("--replay_batch_size", type=int, default=64)
+    # 从buffer中采样的batch大小
+    parser.add_argument("--replay_batch_size", type=int, default=128)
     # Period of sampling
     parser.add_argument("--sample_interval", type=int, default=1)
     # 4.1. Parameters for on_serial_trainer
     parser.add_argument("--num_repeat", type=int, default=10)
-    parser.add_argument("--num_mini_batch", type=int, default=8)
+    parser.add_argument("--num_mini_batch", type=int, default=16)
     parser.add_argument("--mini_batch_size", type=int, default= 8)
     parser.add_argument(
         "--num_epoch",
@@ -176,7 +184,7 @@ if __name__ == "__main__":
     parser.add_argument("--sampler_name", type=str, default="off_sampler",help="Options: on_sampler/off_sampler")
     # Batch size of sampler for buffer store
     parser.add_argument(
-        "--sample_batch_size", type=int, default=64, help="Batch size of sampler for buffer store = 1024",
+        "--sample_batch_size", type=int, default=128, help="Batch size of sampler for buffer store = 1024",
     )
     assert (
         parser.parse_known_args()[0].num_mini_batch * parser.parse_known_args()[0].mini_batch_size
