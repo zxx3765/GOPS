@@ -73,8 +73,8 @@ class DetermPolicy(nn.Module, Action_Distribution):
         self.action_distribution_cls = kwargs["action_distribution_cls"]
 
     def forward(self, obs):
-        action = (self.act_high_lim - self.act_low_lim) / 2 * torch.tanh(
-            self.pi(obs)
+        action = (self.act_high_lim - self.act_low_lim) / 2 * self.pi(
+            obs
         ) + (self.act_high_lim + self.act_low_lim) / 2
         return action
 
