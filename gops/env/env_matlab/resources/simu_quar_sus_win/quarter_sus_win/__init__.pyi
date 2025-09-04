@@ -267,7 +267,7 @@ class QuarterSusWin:
         def rew(self, arg0: typing.SupportsFloat) -> None:
             ...
     class InstP_quarter_sus_win_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['Cs', 'G0', 'Ks', 'Kt', 'Q_F', 'Q_dot_s', 'Q_dot_s_h', 'Q_flec', 'Q_flec_t', 'a_max', 'a_min', 'b_deflec', 'bump_height', 'bump_lenth', 'bump_start', 'f0', 'ms', 'mu', 'omega_1', 'omega_2', 'omega_3', 'omega_4', 'sine_amp', 'sine_freq', 'u', 'vs0', 'vu0', 'xs0', 'xu0', 'road_type'], 'formats': ['<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', 'i1'], 'offsets': [0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232], 'itemsize': 240})
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['Cs', 'G0', 'Ks', 'Kt', 'Q_F', 'Q_b_deflec', 'Q_dot_s', 'Q_dot_s_h', 'Q_flec', 'Q_flec_t', 'a_max', 'a_min', 'b_deflec', 'bump_height', 'bump_lenth', 'bump_start', 'f0', 'ms', 'mu', 'omega_1', 'omega_2', 'omega_3', 'omega_4', 'sine_amp', 'sine_freq', 'u', 'vs0', 'vu0', 'xs0', 'xu0', 'road_type'], 'formats': ['<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', 'i1'], 'offsets': [0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240], 'itemsize': 248})
         def __copy__(self) -> QuarterSusWin.InstP_quarter_sus_win_T:
             ...
         def __deepcopy__(self, memo: dict) -> QuarterSusWin.InstP_quarter_sus_win_T:
@@ -307,6 +307,12 @@ class QuarterSusWin:
             ...
         @Q_F.setter
         def Q_F(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def Q_b_deflec(self) -> float:
+            ...
+        @Q_b_deflec.setter
+        def Q_b_deflec(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def Q_dot_s(self) -> float:
@@ -588,4 +594,4 @@ class RawEnvVec:
     def step(self, action: numpy.typing.NDArray[QuarterSusWin.ExtU_quarter_sus_win_T], indices: numpy.typing.NDArray[numpy.int64]) -> numpy.typing.NDArray[QuarterSusWin.ExtY_quarter_sus_win_T]:
         ...
 __author__: str = 'hjzsj'
-__version__: str = '15.77'
+__version__: str = '15.80'

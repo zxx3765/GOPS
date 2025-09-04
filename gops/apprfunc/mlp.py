@@ -14,6 +14,7 @@
 
 __all__ = [
     "DetermPolicy",
+    'DetermPolicyCustom',
     "FiniteHorizonPolicy",
     "FiniteHorizonFullPolicy",
     "MultiplierNet",
@@ -73,11 +74,24 @@ class DetermPolicy(nn.Module, Action_Distribution):
         self.action_distribution_cls = kwargs["action_distribution_cls"]
 
     def forward(self, obs):
-        action = (self.act_high_lim - self.act_low_lim) / 2 * torch.tanh(
-            self.pi(obs)
+        action = (self.act_high_lim - self.act_low_lim) / 2 * self.pi(
+            obs
         ) + (self.act_high_lim + self.act_low_lim) / 2
         return action
 
+class DetermPolicyCustom(DetermPolicy):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Initialize weights using Xavier initialization
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        """Initialize weights using Xavier initialization."""
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                torch.nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    torch.nn.init.zeros_(module.bias)
 
 class FiniteHorizonPolicy(nn.Module, Action_Distribution):
     """
@@ -291,10 +305,21 @@ class ActionValueCustom(nn.Module, Action_Distribution):
         )
         self.action_distribution_cls = kwargs["action_distribution_cls"]
         self.q2 = mlp(
-            [200] + [1],
+            [200,64,32] + [1],
             get_activation_func(kwargs["hidden_activation"]),
             get_activation_func(kwargs["output_activation"]),
         )
+        # Initialize weights using Xavier initialization
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        """Initialize weights using Xavier initialization."""
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                torch.nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    torch.nn.init.zeros_(module.bias)
+
     def forward(self, obs, act):
         q = self.q1(obs)
         q = torch.cat([q, act], dim=-1)
