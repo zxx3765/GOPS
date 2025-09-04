@@ -33,6 +33,7 @@ class SimuQuarterSusWin(gym.Env,):
         self.is_adversary = kwargs.get("is_adversary", False)
         self.obs_scale = np.array(kwargs["obs_scaling"])
         self.act_scale = np.array(kwargs["act_scaling"])
+        self.rew_scale = np.array(kwargs["rew_scaling"])
         self.act_max = np.array(kwargs["act_max"])
         # self.done_range = kwargs["done_range"]
         self.punish_done = kwargs["punish_done"]
@@ -77,6 +78,7 @@ class SimuQuarterSusWin(gym.Env,):
         self.Q_flec_t = kwargs.get("punish_Q_flec_t", 0.0)
         self.b_deflec = kwargs.get("punish_b_deflec", 0.0)
         self.Q_acc_s_h = kwargs.get("punish_Q_acc_s_h", 0.0)
+        self.Q_b_deflec = kwargs.get("punish_Q_b_defelc", 0.0)
         # self.R = kwargs["punish_R"]
         self.seed_gen,_ =seeding.np_random(self.road_seed)
 
@@ -137,6 +139,7 @@ class SimuQuarterSusWin(gym.Env,):
             self.env.model_class.quarter_sus_win_InstP.Q_F = self.Q_F
             self.env.model_class.quarter_sus_win_InstP.Q_flec_t = self.Q_flec_t
             self.env.model_class.quarter_sus_win_InstP.Q_dot_s_h = self.Q_acc_s_h
+            self.env.model_class.quarter_sus_win_InstP.Q_b_deflec = self.Q_b_deflec
             # self.env.model_class.quarter_sus_win_InstP.Q_dot_u = self.Q_acc_u
             # self.env.model_class.quarter_sus_win_InstP.punish_R = self.R
 
@@ -186,6 +189,7 @@ class SimuQuarterSusWin(gym.Env,):
         if modified_reward <= -self.reward_bound:
             modified_reward = -self.reward_bound
         modified_reward = modified_reward + self.reward_bias
+        modified_reward = modified_reward * self.rew_scale
         return modified_reward
 
     def seed(self, seed=None):
