@@ -299,5 +299,37 @@ class PolicyRunnerCustom(PolicyRunner):
         plt.savefig(path_cumulative_reward_fmt, format=default_cfg["img_fmt"], bbox_inches="tight")
         plt.close()
 
+        # RMS of obs
+        obs_dim_to_plot = min(4, state_dim)
+        for j in range(obs_dim_to_plot):
+            path_state_rms_fmt = os.path.join(
+                self.save_path, "State-{}-RMS.{}".format(j + 1, default_cfg["img_fmt"])
+            )
+            fig, ax = plt.subplots(figsize=cm2inch(*fig_size), dpi=default_cfg["dpi"])
+
+            rms_values = []
+            for i in range(policy_num):
+                rms = np.sqrt(np.mean(state_list[i][:, j] ** 2))
+                rms_values.append(rms)
+
+            x_labels = self.legend_list if len(self.legend_list) == policy_num else self.algorithm_list
+            
+            # save rms data to csv
+            rms_data = pd.DataFrame(data=rms_values, index=x_labels)
+            rms_data.to_csv(
+                os.path.join(self.save_path, "State-{}-RMS.csv".format(j + 1)),
+                encoding="gbk",
+            )
+            
+            ax.bar(x_labels, rms_values)
+            
+            plt.tick_params(labelsize=default_cfg["tick_size"])
+            labels = ax.get_xticklabels() + ax.get_yticklabels()
+            [label.set_fontname(default_cfg["tick_label_font"]) for label in labels]
+            plt.xlabel("Policy", default_cfg["label_font"])
+            plt.ylabel("State-{} RMS".format(j + 1), default_cfg["label_font"])
+            fig.tight_layout(pad=default_cfg["pad"])
+            plt.savefig(path_state_rms_fmt, format=default_cfg["img_fmt"], bbox_inches="tight")
+            plt.close()
         # Call parent draw method for all other plots
         super().draw()
