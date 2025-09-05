@@ -116,9 +116,6 @@ class SimuQuarterSusWin(gym.Env,):
             self.env.model_class.quarter_sus_win_InstP.Cs = self.Cs
             self.env.model_class.quarter_sus_win_InstP.Ks = self.Ks
             self.env.model_class.quarter_sus_win_InstP.ms = self.Ms
-            self.env.model_class.quarter_sus_win_InstP.Cs = self.Cs
-            self.env.model_class.quarter_sus_win_InstP.Ks = self.Ks
-            self.env.model_class.quarter_sus_win_InstP.ms = self.Ms
             self.env.model_class.quarter_sus_win_InstP.mu = self.Mu
             self.env.model_class.quarter_sus_win_InstP.Kt = self.Kt
             self.env.model_class.quarter_sus_win_InstP.G0 = self.G0
@@ -145,7 +142,7 @@ class SimuQuarterSusWin(gym.Env,):
 
         # Reset takes an optional callback
         # This callback will be called after model & parameter initialization and before taking first step.
-        state,info = self.env.reset(preinit=callback(init_state))
+        state,info = self.env.reset(preinit=lambda: callback(init_state))
         # state = self.reset.callback()
         obs = self.postprocess(state)
         return obs
