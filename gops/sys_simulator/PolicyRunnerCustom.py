@@ -2,6 +2,7 @@ from gops.sys_simulator.sys_run import PolicyRunner
 import numpy as np
 import os
 from gops.create_pkg.create_env_model import create_env_model
+from unified_env_config import override_env_args
 class PolicyRunnerCustom(PolicyRunner):
     def __init__(self, log_policy_dir_list, 
                  trained_policy_iteration_list, 
@@ -21,7 +22,8 @@ class PolicyRunnerCustom(PolicyRunner):
                  obs_noise_type = None, 
                  obs_noise_data = None, 
                  action_noise_type = None, 
-                 action_noise_data = None):
+                 action_noise_data = None,
+                 use_unified_env_config = True):  # 新增参数：是否使用统一环境配置
         super().__init__(log_policy_dir_list, 
                          trained_policy_iteration_list, 
                          save_render, plot_range, is_init_info, 
@@ -29,6 +31,32 @@ class PolicyRunnerCustom(PolicyRunner):
                          opt_args, save_opt, constrained_env, is_tracking, 
                          use_dist, dt, obs_noise_type, obs_noise_data, 
                          action_noise_type, action_noise_data)
+        self.use_unified_env_config = use_unified_env_config
+        
+    def _load_env_with_unified_config(self, policy_index=0, use_opt=False):
+        """
+        使用统一配置加载环境
+        """
+        if self.use_unified_env_config:
+            # 使用统一配置覆盖环境参数
+            original_args = self.args_list[policy_index].copy()
+            env_id = original_args.get("env_id", "simu_quarter_sus_win")
+            
+            # 用统一配置覆盖参数
+            unified_args = override_env_args(original_args, env_id)
+            print(f"Using unified environment config for {env_id}")
+            print(f"Key unified parameters: Cs={unified_args['Cs']}, Ks={unified_args['Ks']}, Ms={unified_args['Ms']}, Mu={unified_args['Mu']}")
+            
+            # 临时设置self.args为统一配置
+            original_self_args = self.args
+            self.args = unified_args
+            env = self._PolicyRunner__load_env(use_opt=use_opt)
+            self.args = original_self_args  # 恢复原始self.args
+            
+            return env
+        else:
+            # 使用原始配置
+            return self._PolicyRunner__load_env(use_opt=use_opt)
     def run(self):
         self.__run_data_with_passive()
         self._PolicyRunner__save_mp4_as_gif()
@@ -40,7 +68,7 @@ class PolicyRunnerCustom(PolicyRunner):
         print("*** Begin to run passive policy (baseline) ***")
         self.algorithm_list.append("Passive")
         self.args = self.args_list[0]  # Use first policy's args for env setup
-        env = self._PolicyRunner__load_env()
+        env = self._load_env_with_unified_config(0)  # 使用统一配置加载环境
         if hasattr(env, "set_mode"):
             env.set_mode("test")
             
@@ -99,7 +127,7 @@ class PolicyRunnerCustom(PolicyRunner):
             self.args = self.args_list[i]
             print("===========================================================")
             print("*** Begin to run policy {} ***".format(i + 1))
-            env = self._PolicyRunner__load_env()
+            env = self._load_env_with_unified_config(i)  # 使用统一配置加载环境
             if hasattr(env, "set_mode"):
                 env.set_mode("test")
 
@@ -133,7 +161,7 @@ class PolicyRunnerCustom(PolicyRunner):
             else:
                 self.args = self.args_list[self.policy_num - 1]
                 print("GOPS: Use an optimal controller")
-                env = self._PolicyRunner__load_env(use_opt=True)
+                env = self._load_env_with_unified_config(self.policy_num - 1, use_opt=True)  # 使用统一配置加载环境
                 print("The environment for opt")
                 if hasattr(env, "set_mode"):
                     env.set_mode("test")
