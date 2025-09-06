@@ -83,6 +83,11 @@ class Py2ONNXRunner:
         parser = argparse.ArgumentParser()
         args_dict = vars(parser.parse_args([]))
         args = get_args_from_json(json_path, args_dict)
+        
+        # 确保additional_info存在（兼容旧的配置文件）
+        if "additional_info" not in args:
+            args["additional_info"] = {}
+            
         return args
 
     def _load_all_args(self):
@@ -154,8 +159,14 @@ class Py2ONNXRunner:
         sampler = self._load_sampler()
         model = networks.policy
 
-        # 获取示例观测
-        example_obs_row = sampler.env.reset()[0]
+        # 获取示例观测，处理不同的reset返回格式
+        reset_result = sampler.env.reset()
+        if isinstance(reset_result, tuple):
+            # 新gym API格式：返回(observation, info)
+            example_obs_row = reset_result[0]
+        else:
+            # 旧格式：直接返回observation
+            example_obs_row = reset_result
         example_obs = torch.from_numpy(example_obs_row).float()
         
         # 确保保存目录存在
