@@ -18,15 +18,18 @@ from gops.utils.tensorboard_setup import tb_tags
 
 class DDPGCustom(DDPG):
     """
-    DDPG with gradient clipping - inherits from original DDPG
+    DDPG with gradient clipping and critic target network delayed update - inherits from original DDPG
     
-    Only overrides the necessary methods to add gradient clipping functionality.
-    This keeps the implementation minimal and clean.
+    Extended features:
+    - Gradient clipping for both critic and actor networks
+    - Delayed update for critic target network (similar to TD3)
 
     Additional Args:
-        float   gradient_clip_critic  : gradient clipping threshold for critic network. Default to None (no clipping).
-        float   gradient_clip_actor   : gradient clipping threshold for actor network. Default to None (no clipping).
-        bool    use_gradient_norm     : whether to use gradient norm clipping (True) or value clipping (False). Default to True.
+        float   gradient_clip_critic      : gradient clipping threshold for critic network. Default to None (no clipping).
+        float   gradient_clip_actor       : gradient clipping threshold for actor network. Default to None (no clipping).
+        bool    use_gradient_norm         : whether to use gradient norm clipping (True) or value clipping (False). Default to True.
+        int     critic_target_delay_update: delay update steps for critic target network. Default to 1 (no delay).
+        bool    actor_target_soft_update  : whether to use soft update for actor target network. Default to True.
     """
 
     def __init__(
@@ -34,6 +37,8 @@ class DDPGCustom(DDPG):
         gradient_clip_critic: float = None,
         gradient_clip_actor: float = None,
         use_gradient_norm: bool = True,
+        critic_target_delay_update: int = 1,
+        actor_target_soft_update: bool = True,
         **kwargs
     ):
         # 调用父类构造函数
@@ -44,19 +49,27 @@ class DDPGCustom(DDPG):
         self.gradient_clip_actor = gradient_clip_actor
         self.use_gradient_norm = use_gradient_norm
         
-        print(f"DDPG with Gradient Clipping initialized:")
+        # 添加critic目标网络延迟更新参数
+        self.critic_target_delay_update = critic_target_delay_update
+        self.actor_target_soft_update = actor_target_soft_update
+        
+        print(f"DDPG with Gradient Clipping and Delayed Critic Target Update initialized:")
         print(f"  - Critic gradient clip: {self.gradient_clip_critic}")
         print(f"  - Actor gradient clip: {self.gradient_clip_actor}")
         print(f"  - Use gradient norm: {self.use_gradient_norm}")
+        print(f"  - Critic target delay update: {self.critic_target_delay_update}")
+        print(f"  - Actor target soft update: {self.actor_target_soft_update}")
 
     @property
     def adjustable_parameters(self):
-        """扩展父类的adjustable_parameters，添加gradient clipping参数"""
+        """扩展父类的adjustable_parameters，添加新参数"""
         base_params = super().adjustable_parameters
         return base_params + (
             "gradient_clip_critic",
             "gradient_clip_actor", 
             "use_gradient_norm",
+            "critic_target_delay_update",
+            "actor_target_soft_update",
         )
 
     def _compute_gradient(self, data: dict, iteration):
@@ -132,3 +145,70 @@ class DDPGCustom(DDPG):
             return tb_info, idx, abs_err
         else:
             return tb_info
+
+    # def _update(self, iteration):
+    #     """重写更新方法，实现critic目标网络延迟更新"""
+    #     polyak = 1 - self.tau
+    #     delay_update = self.delay_update
+    #     critic_target_delay = self.critic_target_delay_update
+
+    #     # 更新优化器
+    #     self.networks.q_optimizer.step()
+    #     if iteration % delay_update == 0:
+    #         self.networks.policy_optimizer.step()
+
+    #     with torch.no_grad():
+    #         # Critic目标网络延迟更新
+    #         if iteration % critic_target_delay == 0:
+    #             for p, p_targ in zip(
+    #                 self.networks.q.parameters(), self.networks.q_target.parameters()
+    #             ):
+    #                 # 如果延迟更新，使用硬更新 (tau=1.0) 或保持软更新
+    #                 if critic_target_delay > 1:
+    #                     # 延迟更新时使用硬更新
+    #                     p_targ.data.copy_(p.data)
+    #                 else:
+    #                     # 正常软更新
+    #                     p_targ.data.mul_(polyak)
+    #                     p_targ.data.add_((1 - polyak) * p.data)
+            
+    #         # Actor目标网络更新 (可配置软更新或延迟更新)
+    #         if self.actor_target_soft_update:
+    #             # 软更新
+    #             if iteration % delay_update == 0:
+    #                 for p, p_targ in zip(
+    #                     self.networks.policy.parameters(),
+    #                     self.networks.policy_target.parameters(),
+    #                 ):
+    #                     p_targ.data.mul_(polyak)
+    #                     p_targ.data.add_((1 - polyak) * p.data)
+    #         else:
+    #             # 延迟硬更新 (与critic同频率)
+    #             if iteration % critic_target_delay == 0:
+    #                 for p, p_targ in zip(
+    #                     self.networks.policy.parameters(),
+    #                     self.networks.policy_target.parameters(),
+    #                 ):
+    #                     p_targ.data.copy_(p.data)
+
+    def _update(self, iteration):
+        polyak = 1 - self.tau
+        delay_update = self.delay_update
+
+        self.networks.q_optimizer.step()
+        if iteration % delay_update == 0:
+            self.networks.policy_optimizer.step()
+            
+
+        with torch.no_grad():
+            for p, p_targ in zip(
+                self.networks.q.parameters(), self.networks.q_target.parameters()
+            ):
+                p_targ.data.mul_(polyak)
+                p_targ.data.add_((1 - polyak) * p.data)
+            for p, p_targ in zip(
+                self.networks.policy.parameters(),
+                self.networks.policy_target.parameters(),
+            ):
+                p_targ.data.mul_(polyak)
+                p_targ.data.add_((1 - polyak) * p.data)
