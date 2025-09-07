@@ -60,6 +60,8 @@ if __name__ == "__main__":
     parser.add_argument("--Mu", type=float, default=40.0,help="Unsprung mass")
     parser.add_argument("--Kt", type=float, default=200000.0,help="Tire stiffness")
     parser.add_argument("--G0", type=float, default=0.001024,help="the random road") #Class A
+    parser.add_argument("--G0_min", type=float, default=0.000256,help="minimum G0 for random road training") 
+    parser.add_argument("--G0_max", type=float, default=0.001024,help="maximum G0 for random road training")
     parser.add_argument("--f0", type=float, default=0.1)
     parser.add_argument("--u", type=float, default=20.0)
     parser.add_argument("--as_max", type=float, default=1) #acc_s max 2m/s^2
@@ -184,11 +186,15 @@ if __name__ == "__main__":
     ################################################
 
     # 7. Parameters for evaluator
-    parser.add_argument("--evaluator_name", type=str, default="evaluator")
-    parser.add_argument("--num_eval_episode", type=int, default=10)
-    parser.add_argument("--eval_interval", type=int, default=1)
+    parser.add_argument("--evaluator_name", type=str, default="evaluator_g0_multi")
+    parser.add_argument("--num_eval_episode", type=int, default=2)
+    parser.add_argument("--eval_interval", type=int, default=2)
     parser.add_argument("--eval_save", type=str, default=False, help="save evaluation data")
 
+    # G0 evaluation values for multi-G0 evaluator
+    parser.add_argument("--eval_G0_low", type=float, default=0.000256, help="Low G0 value for evaluation (Class A road)")
+    parser.add_argument("--eval_G0_medium", type=float, default=0.000512, help="Medium G0 value for evaluation (Class B road)") 
+    parser.add_argument("--eval_G0_high", type=float, default=0.001024, help="High G0 value for evaluation (Class C road)")
     ################################################
     # 8. Data savings
     parser.add_argument("--save_folder", type=str, default=None)

@@ -66,6 +66,10 @@ class SimuQuarterSusWin(gym.Env,):
         self.Mu = kwargs["Mu"]
         self.Kt = kwargs["Kt"]
         self.G0 = kwargs["G0"]
+        # G0 randomization parameters
+        self.G0_max = kwargs.get("G0_max", self.G0)
+        self.G0_min = kwargs.get("G0_min", self.G0)
+        
         self.f0 = kwargs["f0"]
         self.u = kwargs["u"]
         self.road_type = kwargs["Road_Type"]
@@ -91,10 +95,14 @@ class SimuQuarterSusWin(gym.Env,):
     def state(self):
         return self._state
 
+    def get_current_G0(self):
+        """获取当前G0值"""
+        return self.env.model_class.quarter_sus_win_InstP.G0
+
     def reset(
-        self, init_state: Optional[Sequence] = None, **kwargs: Any
+        self, init_state: Optional[Sequence] = None, init_G0: Optional[float] = None, **kwargs: Any
     ) -> Tuple[np.ndarray]:
-        def callback(init_state):
+        def callback(init_state, init_G0):
             """Custom reset logic goes here."""
             # Modify your parameter
             # e.g. self.env.model_class.foo_InstP.your_parameter
@@ -113,12 +121,20 @@ class SimuQuarterSusWin(gym.Env,):
                 self.env.model_class.quarter_sus_win_InstP.xu0 = init_state[2]
                 self.env.model_class.quarter_sus_win_InstP.vu0 = init_state[3]
 
+            # G0 parameter setting - similar to init_state logic
+            if init_G0 is None:
+                # Random G0 for training
+                G0_rand = self.rng.uniform(low=self.G0_min, high=self.G0_max)
+                self.env.model_class.quarter_sus_win_InstP.G0 = G0_rand
+            else:
+                # Specific G0 for evaluation/run
+                self.env.model_class.quarter_sus_win_InstP.G0 = init_G0
+
             self.env.model_class.quarter_sus_win_InstP.Cs = self.Cs
             self.env.model_class.quarter_sus_win_InstP.Ks = self.Ks
             self.env.model_class.quarter_sus_win_InstP.ms = self.Ms
             self.env.model_class.quarter_sus_win_InstP.mu = self.Mu
             self.env.model_class.quarter_sus_win_InstP.Kt = self.Kt
-            self.env.model_class.quarter_sus_win_InstP.G0 = self.G0
             self.env.model_class.quarter_sus_win_InstP.f0 = self.f0
             self.env.model_class.quarter_sus_win_InstP.u = self.u
             # self.env.model_class.quarter_sus_win_InstP.as_max = self.as_max
@@ -142,7 +158,7 @@ class SimuQuarterSusWin(gym.Env,):
 
         # Reset takes an optional callback
         # This callback will be called after model & parameter initialization and before taking first step.
-        state,info = self.env.reset(preinit=lambda: callback(init_state))
+        state,info = self.env.reset(preinit=lambda: callback(init_state, init_G0))
         # state = self.reset.callback()
         obs = self.postprocess(state)
         return obs

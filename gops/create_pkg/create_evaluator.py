@@ -41,7 +41,9 @@ def register(
 
 # regist evaluator
 from gops.trainer.evaluator import Evaluator
+from gops.trainer.evaluator_g0_multi import EvaluatorG0Multi
 register(evaluator_name="evaluator", entry_point=Evaluator)
+register(evaluator_name="evaluator_g0_multi", entry_point=EvaluatorG0Multi)
 
 
 def create_evaluator(evaluator_name: str, **kwargs) -> object:

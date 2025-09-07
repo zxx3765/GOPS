@@ -23,7 +23,8 @@ class PolicyRunnerCustom(PolicyRunner):
                  obs_noise_data = None, 
                  action_noise_type = None, 
                  action_noise_data = None,
-                 use_unified_env_config = True):  # 新增参数：是否使用统一环境配置
+                 use_unified_env_config = True,  # 是否使用统一环境配置
+                 eval_G0 = None):  # 评估时指定的G0值
         super().__init__(log_policy_dir_list, 
                          trained_policy_iteration_list, 
                          save_render, plot_range, is_init_info, 
@@ -32,6 +33,7 @@ class PolicyRunnerCustom(PolicyRunner):
                          use_dist, dt, obs_noise_type, obs_noise_data, 
                          action_noise_type, action_noise_data)
         self.use_unified_env_config = use_unified_env_config
+        self.eval_G0 = eval_G0  # 评估时使用的固定G0值
         
     def _load_env_with_unified_config(self, policy_index=0, use_opt=False):
         """
@@ -57,7 +59,22 @@ class PolicyRunnerCustom(PolicyRunner):
         else:
             # 使用原始配置
             return self._PolicyRunner__load_env(use_opt=use_opt)
+            
+    def _update_init_info_with_G0(self):
+        """
+        将eval_G0添加到init_info中，用于环境reset时指定G0值
+        """
+        if self.eval_G0 is not None and self.init_info is not None:
+            self.init_info = self.init_info.copy()
+            self.init_info["init_G0"] = self.eval_G0
+            print(f"Setting evaluation G0 to: {self.eval_G0}")
+        elif self.eval_G0 is not None and self.init_info is None:
+            self.init_info = {"init_G0": self.eval_G0}
+            print(f"Setting evaluation G0 to: {self.eval_G0}")
+    
     def run(self):
+        # 在运行前更新init_info以包含G0参数
+        self._update_init_info_with_G0()
         self.__run_data_with_passive()
         self._PolicyRunner__save_mp4_as_gif()
         self.draw()
