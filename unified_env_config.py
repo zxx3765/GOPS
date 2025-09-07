@@ -23,7 +23,9 @@ UNIFIED_QUARTER_SUSPENSION_CONFIG = {
     "Kt": 200000.0,    # 轮胎刚度 (N/m)
     
     # 道路参数
-    "G0": 0.001256,    # 随机路面参数 (Class A)
+    "G0": 0.001024,    # 随机路面参数 (Class A)
+    "G0_min": 0.0001,  # 训练时G0最小值
+    "G0_max": 0.002,   # 训练时G0最大值
     "f0": 0.1,
     "u": 20.0,         # 车速 (m/s)
     "Road_Type": "Random",  # 道路类型: Sine/Chirp/Random/Bump
@@ -50,7 +52,7 @@ UNIFIED_QUARTER_SUSPENSION_CONFIG = {
     "punish_Q_F": 1,          # 控制力惩罚权重
     "punish_Q_flec_t": 1,     # 轮胎变形惩罚权重
     "punish_Q_acc_s_h": 2.5,  # 高频簧载质量加速度惩罚权重
-    "punish_b_deflec": 0.01,  # 变形边界参数
+    "punish_b_deflec": 0.04,  # 变形边界参数
     "punish_Q_b_defelc": -100, # 边界惩罚权重
     
     # 初始状态范围 [xs0, vs0, xu0, vu0]

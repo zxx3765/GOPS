@@ -50,13 +50,13 @@ if __name__ == "__main__":
 
     parser.add_argument("--Max_step", type=int, default=2000, help="Maximum step of each episode")
     parser.add_argument("--act_repeat", type=int, default=10)
-    parser.add_argument("--obs_scaling", type=list, default=[1, 1, 0.03,0.3])
-    parser.add_argument("--act_scaling", type=float, default=0.01)
-    parser.add_argument("--act_max", type=float, default=400)
+    parser.add_argument("--obs_scaling", type=list, default=[5, 1, 0.03,0.3])
+    parser.add_argument("--act_scaling", type=float, default=0.001)
+    parser.add_argument("--rew_scaling", type=float, default=1)
+    parser.add_argument("--act_max", type=float, default=1000)
     parser.add_argument("--punish_done", type=float, default=0.0)
     parser.add_argument("--rew_bias", type=float, default=0)
-    parser.add_argument("--rew_bound", type=float, default=1000.0)
-
+    parser.add_argument("--rew_bound", type=float, default=100.0)
     parser.add_argument("--rand_bias", type=list, default=[0.01, 0.01, 0.01, 0.01, 0.01, 0.01,0.01, 0.01, 0.01, 0.01])
     parser.add_argument("--rand_center", type=list, default=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     # parser.add_argument("--done_range", type=list, default=[6.0, 5.0, np.pi / 6])
@@ -66,7 +66,9 @@ if __name__ == "__main__":
     parser.add_argument("--Ms", type=float, default=400.0,help="Sprung mass")
     parser.add_argument("--Mu", type=float, default=40.0,help="Unsprung mass")
     parser.add_argument("--Kt", type=float, default=200000.0,help="Tire stiffness")
-    parser.add_argument("--G0", type=float, default=0.000256,help="the random road") #Class A
+    parser.add_argument("--G0", type=float, default=0.000512,help="the random road") #Class A
+    parser.add_argument("--G0_min", type=float, default=0.0001,help="minimum G0 for random road training") 
+    parser.add_argument("--G0_max", type=float, default=0.002,help="maximum G0 for random road training")
     parser.add_argument("--f0", type=float, default=0.1)
     parser.add_argument("--u", type=float, default=20.0)
     parser.add_argument("--as_max", type=float, default=1) #acc_s max 2m/s^2
@@ -79,14 +81,15 @@ if __name__ == "__main__":
     parser.add_argument("--init_state_min", type=list, default=[-0.01, -0.1, -0.01, -0.1])
 
     # 代表accs 和 accu的惩罚权重
-    parser.add_argument("--punish_Q_acc_s", type=float, default=0.7)
+    parser.add_argument("--punish_Q_acc_s", type=float, default=7)
     # parser.add_argument("--punish_Q_acc_u", type=float, default=0.1)
     # 代表deflection的惩罚权重
     parser.add_argument("--punish_b_deflec", type=float, default=0.04)
-    parser.add_argument("--punish_Q_flec", type=float, default=0.1)
-    parser.add_argument("--punish_Q_F", type=float, default=0.1)
-    parser.add_argument("--punish_Q_flec_t", type=float, default=0.1)
-    parser.add_argument("--punish_Q_acc_s_h", type=float, default=0.25)
+    parser.add_argument("--punish_Q_flec", type=float, default=1)
+    parser.add_argument("--punish_Q_F", type=float, default=1)
+    parser.add_argument("--punish_Q_flec_t", type=float, default=1)
+    parser.add_argument("--punish_Q_acc_s_h", type=float, default=2.5)
+    parser.add_argument("--punish_Q_b_defelc", type=float, default=-100)
     # parser.add_argument("--punish_R", type=float, default=0.00001)
     ################################################
     # 2.1 Parameters of value approximate function
@@ -109,7 +112,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--policy_func_name",
         type=str,
-        default="DetermPolicy",
+        default="DetermPolicy", #DetermPolicyCustom
         help="Options: None/DetermPolicy/FiniteHorizonPolicy/StochaPolicy",
     )
     parser.add_argument(
@@ -134,16 +137,16 @@ if __name__ == "__main__":
     ################################################
     # 3. Parameters for algorithm
 
-    parser.add_argument("--value_learning_rate", type=float, default=5e-5, help="3e-4 in the paper")
-    parser.add_argument("--policy_learning_rate", type=float, default=5e-4)
+    parser.add_argument("--value_learning_rate", type=float, default=1e-3, help="3e-4 in the paper")
+    parser.add_argument("--policy_learning_rate", type=float, default=1e-4)
 
     parser.add_argument("--gamma", type=float, default=0.999, help="Discount factor")
-    parser.add_argument("--tau", type=float, default=0.01, help="Param for soft update of target network")
-    parser.add_argument("--delay_update", type=int, default=100, help="Delay update steps for actor")
+    parser.add_argument("--tau", type=float, default=0.005, help="Param for soft update of target network")
+    parser.add_argument("--delay_update", type=int, default=50, help="Delay update steps for actor")
     # Gradient clipping parameters
 
     parser.add_argument("--gradient_clip_critic", type=float, default=10.0, help="Gradient clipping threshold for critic")
-    parser.add_argument("--gradient_clip_actor", type=float, default=1.0, help="Gradient clipping threshold for actor")
+    parser.add_argument("--gradient_clip_actor", type=float, default=10.0, help="Gradient clipping threshold for actor")
     parser.add_argument("--use_gradient_norm", type=bool, default=True, help="Use gradient norm clipping instead of value clipping")
     ################################################
     # 4. Parameters for trainer
@@ -155,7 +158,7 @@ if __name__ == "__main__":
         help="Options: on_serial_trainer, on_sync_trainer, off_serial_trainer, off_async_trainer",
     )
     # Maximum iteration number
-    parser.add_argument("--max_iteration", type=int, default=500000)
+    parser.add_argument("--max_iteration", type=int, default=100000)
     trainer_type = parser.parse_known_args()[0].trainer
     parser.add_argument(
         "--ini_network_dir",
@@ -194,7 +197,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--noise_params",
         type=dict,
-        default={"mean": np.array([0], dtype=np.float32), "std": np.array([0.2], dtype=np.float32),},
+        default={"mean": np.array([0], dtype=np.float32), "std": np.array([0.01], dtype=np.float32),},
         help="used for continuous action space",
     )
 
@@ -205,14 +208,19 @@ if __name__ == "__main__":
         "--buffer_name", type=str, default="replay_buffer", help="Options:replay_buffer/prioritized_replay_buffer"
     )
     parser.add_argument("--buffer_warm_size", type=int, default=5000)
-    parser.add_argument("--buffer_max_size", type=int, default=1000000)
+    parser.add_argument("--buffer_max_size", type=int, default=100000)
     ################################################
 
     # 7. Parameters for evaluator
-    parser.add_argument("--evaluator_name", type=str, default="evaluator")
+    parser.add_argument("--evaluator_name", type=str, default="evaluator_g0_multi")
     parser.add_argument("--num_eval_episode", type=int, default=1)
     parser.add_argument("--eval_interval", type=int, default=100)
     parser.add_argument("--eval_save", type=str, default=False, help="save evaluation data")
+    
+    # G0 evaluation values for multi-G0 evaluator
+    parser.add_argument("--eval_G0_low", type=float, default=0.0001, help="Low G0 value for evaluation (Class A road)")
+    parser.add_argument("--eval_G0_medium", type=float, default=0.000512, help="Medium G0 value for evaluation (Class B road)") 
+    parser.add_argument("--eval_G0_high", type=float, default=0.002, help="High G0 value for evaluation (Class C road)")
 
     ################################################
     # 8. Data savings

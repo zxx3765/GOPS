@@ -5,10 +5,6 @@ channels:
 
 dependencies:
   - python=3.8
-  - pytorch::pytorch>=1.13.0
-  - pytorch::torchvision>=0.14.0
-  - pytorch::torchaudio>=0.13.0
-  - pytorch::cpuonly
   - numpy>1.16.0
   - ray-default>=1.0.0
   - pandas
@@ -18,6 +14,10 @@ dependencies:
   - scipy
   - pip
   - pip:
+    # PyTorch packages with CUDA 12.1 support
+    - torch==2.3.1
+    - torchvision==0.18.1
+    - torchaudio==2.3.1
     - gym==0.23.1
     - gymnasium==0.29.1
     - box2d
@@ -26,3 +26,5 @@ dependencies:
     - slxpy
     - openpyxl
     - pytest
+    - onnx==1.16.0 
+    - onnxruntime==1.18.1
