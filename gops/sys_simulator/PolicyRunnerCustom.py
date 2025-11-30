@@ -240,10 +240,11 @@ class PolicyRunnerCustom(PolicyRunner):
         import seaborn as sns
         import pandas as pd
         from gops.utils.plot_evaluation import cm2inch
-        
+        import numpy as np
+
         # Import default config from parent module
         from gops.sys_simulator.sys_run import default_cfg
-        
+
         fig_size = (
             default_cfg["fig_size"],
             default_cfg["fig_size"],
@@ -345,6 +346,10 @@ class PolicyRunnerCustom(PolicyRunner):
         plt.close()
 
         # RMS of obs
+        # Define state names for labels
+        state_names = ["xs (Sprung Mass Position)", "vs (Sprung Mass Velocity)",
+                       "xu (Unsprung Mass Position)", "vu (Unsprung Mass Velocity)"]
+
         obs_dim_to_plot = min(4, state_dim)
         for j in range(obs_dim_to_plot):
             path_state_rms_fmt = os.path.join(
@@ -358,23 +363,56 @@ class PolicyRunnerCustom(PolicyRunner):
                 rms_values.append(rms)
 
             x_labels = self.legend_list if len(self.legend_list) == policy_num else self.algorithm_list
-            
+
             # save rms data to csv
             rms_data = pd.DataFrame(data=rms_values, index=x_labels)
             rms_data.to_csv(
                 os.path.join(self.save_path, "State-{}-RMS.csv".format(j + 1)),
                 encoding="gbk",
             )
-            
+
             ax.bar(x_labels, rms_values)
-            
+
             plt.tick_params(labelsize=default_cfg["tick_size"])
             labels = ax.get_xticklabels() + ax.get_yticklabels()
             [label.set_fontname(default_cfg["tick_label_font"]) for label in labels]
             plt.xlabel("Policy", default_cfg["label_font"])
-            plt.ylabel("State-{} RMS".format(j + 1), default_cfg["label_font"])
+            # Use custom state name for RMS plot
+            y_label = state_names[j] + " RMS" if j < len(state_names) else "State-{} RMS".format(j + 1)
+            plt.ylabel(y_label, default_cfg["label_font"])
             fig.tight_layout(pad=default_cfg["pad"])
             plt.savefig(path_state_rms_fmt, format=default_cfg["img_fmt"], bbox_inches="tight")
             plt.close()
+
         # Call parent draw method for all other plots
         super().draw()
+
+        # Redraw state plots with custom titles to override the default ones
+        for j in range(state_dim):
+            path_state_fmt = os.path.join(
+                self.save_path, "State-{}.{}".format(j + 1, default_cfg["img_fmt"])
+            )
+            fig, ax = plt.subplots(figsize=cm2inch(*fig_size), dpi=default_cfg["dpi"])
+
+            for i in range(policy_num):
+                legend = (
+                    self.legend_list[i]
+                    if len(self.legend_list) == policy_num
+                    else self.algorithm_list[i]
+                )
+                sns.lineplot(
+                    x=step_list[i], y=state_list[i][:, j], label="{}".format(legend)
+                )
+            plt.tick_params(labelsize=default_cfg["tick_size"])
+            labels = ax.get_xticklabels() + ax.get_yticklabels()
+            [label.set_fontname(default_cfg["tick_label_font"]) for label in labels]
+            plt.xlabel(x_label, default_cfg["label_font"])
+            # Use custom state name if available, otherwise use default
+            y_label = state_names[j] if j < len(state_names) else "State-{}".format(j + 1)
+            plt.ylabel(y_label, default_cfg["label_font"])
+            plt.legend(loc="best", prop=default_cfg["legend_font"])
+            fig.tight_layout(pad=default_cfg["pad"])
+            plt.savefig(
+                path_state_fmt, format=default_cfg["img_fmt"], bbox_inches="tight"
+            )
+            plt.close()
