@@ -24,16 +24,18 @@ class PolicyRunnerCustom(PolicyRunner):
                  action_noise_type = None, 
                  action_noise_data = None,
                  use_unified_env_config = True,  # 是否使用统一环境配置
-                 eval_G0 = None):  # 评估时指定的G0值
-        super().__init__(log_policy_dir_list, 
-                         trained_policy_iteration_list, 
-                         save_render, plot_range, is_init_info, 
-                         init_info, legend_list, use_opt, load_opt_path, 
-                         opt_args, save_opt, constrained_env, is_tracking, 
-                         use_dist, dt, obs_noise_type, obs_noise_data, 
+                 eval_G0 = None,  # 评估时指定的G0值
+                 eval_max_step = None):  # 评估时指定的最大步长
+        super().__init__(log_policy_dir_list,
+                         trained_policy_iteration_list,
+                         save_render, plot_range, is_init_info,
+                         init_info, legend_list, use_opt, load_opt_path,
+                         opt_args, save_opt, constrained_env, is_tracking,
+                         use_dist, dt, obs_noise_type, obs_noise_data,
                          action_noise_type, action_noise_data)
         self.use_unified_env_config = use_unified_env_config
         self.eval_G0 = eval_G0  # 评估时使用的固定G0值
+        self.eval_max_step = eval_max_step  # 评估时使用的最大步长
         
     def _load_env_with_unified_config(self, policy_index=0, use_opt=False):
         """
@@ -46,8 +48,14 @@ class PolicyRunnerCustom(PolicyRunner):
             
             # 用统一配置覆盖参数
             unified_args = override_env_args(original_args, env_id)
+
+            # 如果指定了eval_max_step，覆盖Max_step参数
+            if self.eval_max_step is not None:
+                unified_args['Max_step'] = self.eval_max_step
+                print(f"Setting evaluation Max_step to: {self.eval_max_step}")
+
             print(f"Using unified environment config for {env_id}")
-            print(f"Key unified parameters: Cs={unified_args['Cs']}, Ks={unified_args['Ks']}, Ms={unified_args['Ms']}, Mu={unified_args['Mu']}")
+            print(f"Key unified parameters: Cs={unified_args['Cs']}, Ks={unified_args['Ks']}, Ms={unified_args['Ms']}, Mu={unified_args['Mu']}, Max_step={unified_args['Max_step']}")
             
             # 临时设置self.args为统一配置
             original_self_args = self.args
@@ -78,6 +86,7 @@ class PolicyRunnerCustom(PolicyRunner):
         self.__run_data_with_passive()
         self._PolicyRunner__save_mp4_as_gif()
         self.draw()
+        self.draw_frequency_response()
     
     def __run_data_with_passive(self):
         # Run passive policy first as comparison baseline
@@ -347,8 +356,8 @@ class PolicyRunnerCustom(PolicyRunner):
 
         # RMS of obs
         # Define state names for labels
-        state_names = ["xs (Sprung Mass Position)", "vs (Sprung Mass Velocity)",
-                       "xu (Unsprung Mass Position)", "vu (Unsprung Mass Velocity)"]
+        state_names = ["as (Sprung Mass Acceleration)", "vs (Sprung Mass Velocity)",
+                       "xdef (Suspension Deflection)", "vdef (Suspension Deflection Velocity)"]
 
         obs_dim_to_plot = min(4, state_dim)
         for j in range(obs_dim_to_plot):
@@ -394,7 +403,7 @@ class PolicyRunnerCustom(PolicyRunner):
                 if isinstance(info, dict) and 'info' in info:
                     info_array = info['info']
                     if len(info_array) > 7:
-                        accel_data.append(info_array[7])
+                        accel_data.append(info_array[6])
                     else:
                         accel_data.append(0.0)
                 else:
@@ -417,13 +426,13 @@ class PolicyRunnerCustom(PolicyRunner):
 
         # Plot acceleration time history
         path_accel_fmt = os.path.join(
-            self.save_path, "Sprung_Mass_Acceleration.{}".format(default_cfg["img_fmt"])
+            self.save_path, "Unsprung_Mass_Acceleration.{}".format(default_cfg["img_fmt"])
         )
         fig, ax = plt.subplots(figsize=cm2inch(*fig_size), dpi=default_cfg["dpi"])
 
         # Save acceleration data to CSV
         accel_data_df = pd.DataFrame(data=accel_list)
-        accel_data_df.to_csv(os.path.join(self.save_path, "Sprung_Mass_Acceleration.csv"), encoding="gbk")
+        accel_data_df.to_csv(os.path.join(self.save_path, "Unsprung_Mass_Acceleration.csv"), encoding="gbk")
 
         for i in range(policy_num):
             legend = (
@@ -437,15 +446,15 @@ class PolicyRunnerCustom(PolicyRunner):
         labels = ax.get_xticklabels() + ax.get_yticklabels()
         [label.set_fontname(default_cfg["tick_label_font"]) for label in labels]
         plt.xlabel(x_label, default_cfg["label_font"])
-        plt.ylabel("Sprung Mass Acceleration (m/s²)", default_cfg["label_font"])
+        plt.ylabel("Unsprung Mass Acceleration (m/s²)", default_cfg["label_font"])
         plt.legend(loc="best", prop=default_cfg["legend_font"])
         fig.tight_layout(pad=default_cfg["pad"])
         plt.savefig(path_accel_fmt, format=default_cfg["img_fmt"], bbox_inches="tight")
         plt.close()
 
-        # Plot RMS of sprung mass acceleration
+        # Plot RMS of unsprung mass acceleration
         path_accel_rms_fmt = os.path.join(
-            self.save_path, "Sprung_Mass_Acceleration_RMS.{}".format(default_cfg["img_fmt"])
+            self.save_path, "Unsprung_Mass_Acceleration_RMS.{}".format(default_cfg["img_fmt"])
         )
         fig, ax = plt.subplots(figsize=cm2inch(*fig_size), dpi=default_cfg["dpi"])
 
@@ -459,7 +468,7 @@ class PolicyRunnerCustom(PolicyRunner):
         # save rms data to csv
         rms_data = pd.DataFrame(data=rms_values, index=x_labels)
         rms_data.to_csv(
-            os.path.join(self.save_path, "Sprung_Mass_Acceleration_RMS.csv"),
+            os.path.join(self.save_path, "Unsprung_Mass_Acceleration_RMS.csv"),
             encoding="gbk",
         )
 
@@ -469,7 +478,7 @@ class PolicyRunnerCustom(PolicyRunner):
         labels = ax.get_xticklabels() + ax.get_yticklabels()
         [label.set_fontname(default_cfg["tick_label_font"]) for label in labels]
         plt.xlabel("Policy", default_cfg["label_font"])
-        plt.ylabel("Sprung Mass Acceleration RMS (m/s²)", default_cfg["label_font"])
+        plt.ylabel("Unsprung Mass Acceleration RMS (m/s²)", default_cfg["label_font"])
         fig.tight_layout(pad=default_cfg["pad"])
         plt.savefig(path_accel_rms_fmt, format=default_cfg["img_fmt"], bbox_inches="tight")
         plt.close()
@@ -537,16 +546,16 @@ class PolicyRunnerCustom(PolicyRunner):
                        "xu (Unsprung Mass Position)", "vu (Unsprung Mass Velocity)"]
 
         # First, let's debug and find where road input is stored
-        print("\n=== Debugging info structure ===")
-        if len(self.eval_list) > 0 and len(self.eval_list[0]["info_list"]) > 1:
-            sample_info = self.eval_list[0]["info_list"][1]
-            print(f"Info type: {type(sample_info)}")
-            print(f"Info content: {sample_info}")
-            if isinstance(sample_info, dict):
-                print(f"Info keys: {sample_info.keys()}")
-                for key, value in sample_info.items():
-                    print(f"  {key}: type={type(value)}, value={value}")
-        print("=== End debug ===\n")
+        # print("\n=== Debugging info structure ===")
+        # if len(self.eval_list) > 0 and len(self.eval_list[0]["info_list"]) > 1:
+        #     sample_info = self.eval_list[0]["info_list"][1]
+        #     print(f"Info type: {type(sample_info)}")
+        #     print(f"Info content: {sample_info}")
+        #     if isinstance(sample_info, dict):
+        #         print(f"Info keys: {sample_info.keys()}")
+        #         for key, value in sample_info.items():
+        #             print(f"  {key}: type={type(value)}, value={value}")
+        # print("=== End debug ===\n")
 
         # Sampling frequency
         if self.dt is not None:
@@ -628,12 +637,12 @@ class PolicyRunnerCustom(PolicyRunner):
             accel_input = np.array(accel_input)
 
             # Debug: print road input statistics
-            print(f"\nPolicy {i} ({self.legend_list[i] if self.legend_list and len(self.legend_list) > i else f'Policy {i+1}'}):")
-            print(f"  Road input length: {len(road_input)}")
-            print(f"  Road input mean: {np.mean(road_input):.6f}")
-            print(f"  Road input std: {np.std(road_input):.6f}")
-            print(f"  Road input min: {np.min(road_input):.6f}")
-            print(f"  Road input max: {np.max(road_input):.6f}")
+            # print(f"\nPolicy {i} ({self.legend_list[i] if self.legend_list and len(self.legend_list) > i else f'Policy {i+1}'}):")
+            # print(f"  Road input length: {len(road_input)}")
+            # print(f"  Road input mean: {np.mean(road_input):.6f}")
+            # print(f"  Road input std: {np.std(road_input):.6f}")
+            # print(f"  Road input min: {np.min(road_input):.6f}")
+            # print(f"  Road input max: {np.max(road_input):.6f}")
 
             # Handle case where road_input/accel_input length doesn't match state_array
             min_len = min(len(road_input), len(state_array), len(accel_input))
@@ -661,16 +670,17 @@ class PolicyRunnerCustom(PolicyRunner):
             # Remove DC component
             road_input = road_input - np.mean(road_input)
 
-            # Apply window to reduce spectral leakage
-            window = signal.windows.hann(N)
-            road_input_windowed = road_input * window
+            # Use Welch method (similar to MATLAB tfestimate)
+            # Parameters similar to MATLAB tfestimate
+            nperseg = min(1024, N // 4)  # Window length
+            noverlap = nperseg // 2  # 50% overlap
 
-            # FFT of road input
-            road_fft = np.fft.rfft(road_input_windowed)
-            road_magnitude = np.abs(road_fft)
+            # Calculate cross power spectral density and power spectral density
+            # This is equivalent to MATLAB's tfestimate
+            from scipy.signal import csd, welch
 
             # Frequency bins
-            freqs = np.fft.rfftfreq(N, d=1/fs)
+            freqs = np.fft.rfftfreq(nperseg, d=1/fs)
 
             # Plot frequency response for each state
             legend_name = (
@@ -683,22 +693,19 @@ class PolicyRunnerCustom(PolicyRunner):
                 # Remove DC component from state
                 state_signal = state_array[:, j] - np.mean(state_array[:, j])
 
-                # Apply window to state signal
-                state_signal_windowed = state_signal * window
+                # Calculate cross-spectral density (Pxy) and auto-spectral density (Pxx)
+                freqs, Pxy = csd(road_input, state_signal, fs=fs, nperseg=nperseg, noverlap=noverlap)
+                _, Pxx = welch(road_input, fs=fs, nperseg=nperseg, noverlap=noverlap)
 
-                # FFT of state
-                state_fft = np.fft.rfft(state_signal_windowed)
-                state_magnitude = np.abs(state_fft)
-
-                # Calculate frequency response (transfer function magnitude)
-                # Avoid division by zero
+                # Transfer function estimate H = Pxy / Pxx
                 with np.errstate(divide='ignore', invalid='ignore'):
-                    freq_response = np.where(road_magnitude > 1e-10,
-                                            state_magnitude / road_magnitude,
-                                            0.0)
+                    freq_response = np.where(Pxx > 1e-10, Pxy / Pxx, 0.0)
+
+                # Magnitude of transfer function
+                freq_response_mag = np.abs(freq_response)
 
                 # Convert to dB
-                freq_response_db = 20 * np.log10(freq_response + 1e-10)
+                freq_response_db = 20 * np.log10(freq_response_mag + 1e-10)
 
                 # Save data to file for this policy
                 freq_data = pd.DataFrame({
@@ -711,29 +718,28 @@ class PolicyRunnerCustom(PolicyRunner):
                 )
                 freq_data.to_csv(csv_filename, encoding="gbk", index=False)
 
-            # Calculate and save frequency response for sprung mass acceleration
+            # Calculate and save frequency response for unsprung mass acceleration
             # Remove DC component from acceleration
             accel_signal = accel_input - np.mean(accel_input)
 
-            # Apply window to acceleration signal
-            accel_signal_windowed = accel_signal * window
+            # Use Welch method (similar to MATLAB tfestimate)
+            # Calculate cross-spectral density (Pxy) and auto-spectral density (Pxx)
+            freqs_accel, Pxy_accel = csd(road_input, accel_signal, fs=fs, nperseg=nperseg, noverlap=noverlap)
+            _, Pxx_accel = welch(road_input, fs=fs, nperseg=nperseg, noverlap=noverlap)
 
-            # FFT of acceleration
-            accel_fft = np.fft.rfft(accel_signal_windowed)
-            accel_magnitude = np.abs(accel_fft)
-
-            # Calculate frequency response (transfer function magnitude)
+            # Transfer function estimate H = Pxy / Pxx
             with np.errstate(divide='ignore', invalid='ignore'):
-                freq_response_accel = np.where(road_magnitude > 1e-10,
-                                               accel_magnitude / road_magnitude,
-                                               0.0)
+                freq_response_accel = np.where(Pxx_accel > 1e-10, Pxy_accel / Pxx_accel, 0.0)
+
+            # Magnitude of transfer function
+            freq_response_accel_mag = np.abs(freq_response_accel)
 
             # Convert to dB
-            freq_response_accel_db = 20 * np.log10(freq_response_accel + 1e-10)
+            freq_response_accel_db = 20 * np.log10(freq_response_accel_mag + 1e-10)
 
             # Save acceleration frequency response data to file
             freq_data_accel = pd.DataFrame({
-                'Frequency (Hz)': freqs,
+                'Frequency (Hz)': freqs_accel,
                 'Magnitude (dB)': freq_response_accel_db
             })
             csv_filename_accel = os.path.join(
@@ -811,24 +817,22 @@ class PolicyRunnerCustom(PolicyRunner):
                 road_input = road_input - np.mean(road_input)
                 state_signal = state_array[:, j] - np.mean(state_array[:, j])
 
-                window = signal.windows.hann(N)
-                road_input_windowed = road_input * window
-                state_signal_windowed = state_signal * window
+                # Use Welch method (similar to MATLAB tfestimate)
+                nperseg = min(1024, N // 4)  # Window length
+                noverlap = nperseg // 2  # 50% overlap
 
-                road_fft = np.fft.rfft(road_input_windowed)
-                road_magnitude = np.abs(road_fft)
+                # Calculate cross-spectral density and auto-spectral density
+                from scipy.signal import csd, welch
+                freqs, Pxy = csd(road_input, state_signal, fs=fs, nperseg=nperseg, noverlap=noverlap)
+                _, Pxx = welch(road_input, fs=fs, nperseg=nperseg, noverlap=noverlap)
 
-                state_fft = np.fft.rfft(state_signal_windowed)
-                state_magnitude = np.abs(state_fft)
-
-                freqs = np.fft.rfftfreq(N, d=1/fs)
-
+                # Transfer function estimate H = Pxy / Pxx
                 with np.errstate(divide='ignore', invalid='ignore'):
-                    freq_response = np.where(road_magnitude > 1e-10,
-                                            state_magnitude / road_magnitude,
-                                            0.0)
+                    freq_response = np.where(Pxx > 1e-10, Pxy / Pxx, 0.0)
 
-                freq_response_db = 20 * np.log10(freq_response + 1e-10)
+                # Magnitude and convert to dB
+                freq_response_mag = np.abs(freq_response)
+                freq_response_db = 20 * np.log10(freq_response_mag + 1e-10)
 
                 legend_name = (
                     self.legend_list[i]
@@ -939,24 +943,22 @@ class PolicyRunnerCustom(PolicyRunner):
             road_input = road_input - np.mean(road_input)
             accel_signal = accel_input - np.mean(accel_input)
 
-            window = signal.windows.hann(N)
-            road_input_windowed = road_input * window
-            accel_signal_windowed = accel_signal * window
+            # Use Welch method (similar to MATLAB tfestimate)
+            nperseg = min(1024, N // 4)  # Window length
+            noverlap = nperseg // 2  # 50% overlap
 
-            road_fft = np.fft.rfft(road_input_windowed)
-            road_magnitude = np.abs(road_fft)
+            # Calculate cross-spectral density and auto-spectral density
+            from scipy.signal import csd, welch
+            freqs, Pxy_accel = csd(road_input, accel_signal, fs=fs, nperseg=nperseg, noverlap=noverlap)
+            _, Pxx_accel = welch(road_input, fs=fs, nperseg=nperseg, noverlap=noverlap)
 
-            accel_fft = np.fft.rfft(accel_signal_windowed)
-            accel_magnitude = np.abs(accel_fft)
-
-            freqs = np.fft.rfftfreq(N, d=1/fs)
-
+            # Transfer function estimate H = Pxy / Pxx
             with np.errstate(divide='ignore', invalid='ignore'):
-                freq_response_accel = np.where(road_magnitude > 1e-10,
-                                               accel_magnitude / road_magnitude,
-                                               0.0)
+                freq_response_accel = np.where(Pxx_accel > 1e-10, Pxy_accel / Pxx_accel, 0.0)
 
-            freq_response_accel_db = 20 * np.log10(freq_response_accel + 1e-10)
+            # Magnitude and convert to dB
+            freq_response_accel_mag = np.abs(freq_response_accel)
+            freq_response_accel_db = 20 * np.log10(freq_response_accel_mag + 1e-10)
 
             legend_name = (
                 self.legend_list[i]
@@ -978,7 +980,7 @@ class PolicyRunnerCustom(PolicyRunner):
         labels = ax.get_xticklabels() + ax.get_yticklabels()
         [label.set_fontname(default_cfg["tick_label_font"]) for label in labels]
         plt.xlabel("Frequency (Hz)", default_cfg["label_font"])
-        plt.ylabel("Magnitude (dB) - Sprung Mass Acceleration", default_cfg["label_font"])
+        plt.ylabel("Magnitude (dB) - Unsprung Mass Acceleration", default_cfg["label_font"])
         plt.legend(loc="best", prop=default_cfg["legend_font"])
         plt.grid(True, which='both', alpha=0.3)  # Show grid for both major and minor ticks
         plt.xlim(0.2, 25)  # Set x-axis range from 0.2 to 25 Hz

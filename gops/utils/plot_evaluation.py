@@ -36,6 +36,8 @@ def self_plot(
     ncol=1,
     figsize_scalar=1,
     category="plot",
+    use_log_scale=False,
+    use_symlog_scale=False,
 ):
     """
     Plot single figure containing several curves.
@@ -99,6 +101,21 @@ def self_plot(
     plt.xlabel(xlabel, default_cfg["label_font"])
     plt.ylabel(ylabel, default_cfg["label_font"])
 
+    # Set log scale for y-axis if requested
+    if use_log_scale:
+        ax.set_yscale('log')
+    elif use_symlog_scale:
+        # Symmetric log scale can handle negative values
+        # linthresh determines the range around zero that is linear
+        import numpy as np
+        if isinstance(data, list):
+            all_y = np.concatenate([d["y"] for d in data])
+        else:
+            all_y = data["y"]
+        # Set linthresh to 1% of the maximum absolute value or 1.0, whichever is larger
+        linthresh = max(1.0, np.max(np.abs(all_y)) * 0.01)
+        ax.set_yscale('symlog', linthresh=linthresh)
+
     if yline is not None:
         plt.axhline(yline, ls=":", c="grey")
     if xline is not None:
@@ -134,12 +151,43 @@ def plot_all(path):
     os.makedirs(figure_path, exist_ok=True)
     for (key, values) in data.items():
         x_label, y_label = str_edit(key)
+
+        # Handle TAR-related plots
+        use_log = False
+        use_symlog = False
+
+        if "TAR" in y_label or "TAR" in key:
+            import numpy as np
+            y_data = values["y"] if isinstance(values, dict) else values[0]["y"]
+
+            # Check data characteristics
+            all_positive = np.all(y_data > 0)
+            all_negative = np.all(y_data < 0)
+            has_mixed_signs = not (all_positive or all_negative)
+
+            if all_positive:
+                # All positive: use regular log scale
+                use_log = True
+                print(f"Using log scale for '{y_label}' (all positive values)")
+            elif all_negative:
+                # All negative: use linear scale (log scale cannot handle negative values)
+                # Keep original negative values for display
+                use_log = False
+                use_symlog = False
+                print(f"Using linear scale for '{y_label}' (all negative values)")
+            else:
+                # Mixed positive and negative: use symlog
+                use_symlog = True
+                print(f"Using symlog scale for '{y_label}' (mixed positive/negative values)")
+
         self_plot(
             values,
             os.path.join(figure_path, x_label + "-" + y_label + ".tiff"),
             xlabel=x_label,
             ylabel=y_label,
             color_list=["orange"],
+            use_log_scale=use_log,
+            use_symlog_scale=use_symlog,
         )
     plt.show()
 

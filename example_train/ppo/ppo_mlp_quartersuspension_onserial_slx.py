@@ -74,10 +74,10 @@ if __name__ == "__main__":
     parser.add_argument("--init_state_min", type=list, default=[-0.01, -0.1, -0.01, -0.1])
 
     # 代表accs 和 accu的惩罚权重
-    parser.add_argument("--punish_Q_acc_s", type=float, default=7)
+    parser.add_argument("--punish_Q_acc_s", type=float, default=10)
     # parser.add_argument("--punish_Q_acc_u", type=float, default=0.1)
     # 代表deflection的惩罚权重
-    parser.add_argument("--punish_b_deflec", type=float, default=0.04)
+    parser.add_argument("--punish_b_deflec", type=float, default=0.03)
     parser.add_argument("--punish_Q_flec", type=float, default=1)
     parser.add_argument("--punish_Q_F", type=float, default=1)
     parser.add_argument("--punish_Q_flec_t", type=float, default=1)

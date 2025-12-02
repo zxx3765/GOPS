@@ -13,21 +13,19 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 from gops.sys_simulator.PolicyRunnerCustom import PolicyRunnerCustom
 import numpy as np
-result_path = "D:/Project/GOPS/results/simu_quarter_sus_win/"
+result_path = "D:/Project/GOPS/results/simu_quarter_sus_imp_force/"
 runner = PolicyRunnerCustom(
     log_policy_dir_list=[
-                         result_path+"PPO_250905-215910",
-                         result_path+"SAC_251201-145010",
-                         result_path+"TD3_251201-154904",
-                         result_path+"TD3_251201-163805",
-                         result_path+"TD3_251201-201929",
-                         result_path+"SAC_251201-210322",],
-    trained_policy_iteration_list=['633_opt','13000_opt','2708_opt','7170_opt','7954_opt','11200_opt'],
+                         result_path+"TD3_251202-104438",
+                         result_path+"TD3_251202-105503",
+                         result_path+"TD3_251202-124624",
+                         result_path+"TD3_251202-143843",],
+    trained_policy_iteration_list=['7603_opt','34401_opt','42163_opt','26774_opt'],
     is_init_info=True,
     init_info={"init_state": [0.0, 0.0, 0.0, 0.0], "ref_time": 0.0,
                "ref_num": 3}, # ref_num = [0, 1, 2,..., 7]
     save_render=False,
-    legend_list=["633_PPO",'13000_SAC','2708_TD3','7170_TD3','7954_TD3','11200_SAC'],
+    legend_list=["7603_TD3",'34401_TD3','42163_TD3','26774_TD3'],
     opt_args={
         "opt_controller_type": "OPT",
         "num_pred_step": 10,

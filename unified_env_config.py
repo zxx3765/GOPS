@@ -37,7 +37,7 @@ UNIFIED_SUSPENSION_FORCE_CONFIG = {
     "deflec_max": 0.04, # 最大悬架变形 (m)
     
     # 仿真参数
-    "Max_step": 2000,   # 每个episode最大步数
+    "Max_step": 10000,   # 每个episode最大步数
     "act_repeat": 10,   # 动作重复次数
     "dt": 0.01,         # 时间步长 (s)
     
@@ -146,6 +146,8 @@ def get_unified_config(env_id="simu_quarter_sus_win"):
         return UNIFIED_SUSPENSION_FORCE_CONFIG.copy()
     elif env_id == "simu_quarter_sus_vimp":
         return UNIFIED_SUSPENSION_IMP_CONFIG.copy()
+    elif env_id == "simu_quarter_sus_imp_force":
+        return UNIFIED_SUSPENSION_FORCE_CONFIG.copy()
     else:
         raise ValueError(f"Unified config for environment '{env_id}' is not implemented yet")
 

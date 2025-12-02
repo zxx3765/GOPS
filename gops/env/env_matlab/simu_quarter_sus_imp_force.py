@@ -16,19 +16,19 @@ import gymnasium as gym
 from gymnasium import spaces
 from gymnasium.utils import seeding
 import numpy as np
-from gops.env.env_matlab.resources.simu_quar_sus_vimp import quarter_sus_vimp
+from gops.env.env_matlab.resources.simu_quar_sus_imp_force import quarter_sus_imp_force
 
 
 
-class SimuQuarterSusVimp(gym.Env,):
+class SimuQuarterSusImpForce(gym.Env,):
     def __init__(self, **kwargs: Any):
-        spec = quarter_sus_vimp._env.EnvSpec(
-            id="SimuQuarterSusVimp-v0",
+        spec = quarter_sus_imp_force._env.EnvSpec(
+            id="SimuQuarterSusImpForce-v0",
             max_episode_steps=kwargs["Max_step"],
             terminal_bonus_reward=kwargs["punish_done"],
             strict_reset=True,
         )
-        self.env = quarter_sus_vimp.GymEnv(spec)
+        self.env = quarter_sus_imp_force.GymEnv(spec)
         self.dt = 0.01
         self.is_adversary = kwargs.get("is_adversary", False)
         self.obs_scale = np.array(kwargs["obs_scaling"])
@@ -46,7 +46,7 @@ class SimuQuarterSusVimp(gym.Env,):
         self.state_min = np.array(kwargs["init_state_min"], dtype=float)
         self.observation_space = spaces.Box(obs_low, -obs_low)
         self.action_space = spaces.Box(
-            np.array([0, -50000, -9999, ]), np.array([100, 50000, 9999,]), dtype=float
+            -self.act_scale * self.act_max, self.act_scale * self.act_max,shape=(1,), dtype=float
         )
         # Split RNG, if randomness is needed
         self.rng = np.random.default_rng()
@@ -97,7 +97,7 @@ class SimuQuarterSusVimp(gym.Env,):
 
     def get_current_G0(self):
         """获取当前G0值"""
-        return self.env.model_class.quarter_sus_vimp_InstP.G0
+        return self.env.model_class.quarter_sus_imp_force_InstP.G0
 
     def reset(
         self, init_state: Optional[Sequence] = None, init_G0: Optional[float] = None, **kwargs: Any
@@ -109,34 +109,34 @@ class SimuQuarterSusVimp(gym.Env,):
             if init_state is None:
                 self._state = np.random.uniform(low=self.rand_low, high=self.rand_high)
                 init_state_rand = self.rng.uniform(low=self.state_min, high=self.state_max)
-                self.env.model_class.quarter_sus_vimp_InstP.xs0 = init_state_rand[0]
-                self.env.model_class.quarter_sus_vimp_InstP.vs0 = init_state_rand[1]
-                self.env.model_class.quarter_sus_vimp_InstP.xu0 = init_state_rand[2]
-                self.env.model_class.quarter_sus_vimp_InstP.vu0 = init_state_rand[3]
+                self.env.model_class.quarter_sus_imp_force_InstP.xs0 = init_state_rand[0]
+                self.env.model_class.quarter_sus_imp_force_InstP.vs0 = init_state_rand[1]
+                self.env.model_class.quarter_sus_imp_force_InstP.xu0 = init_state_rand[2]
+                self.env.model_class.quarter_sus_imp_force_InstP.vu0 = init_state_rand[3]
             else:
                 self._state = np.array(init_state, dtype=np.float32)
                 init_state = self._state
-                self.env.model_class.quarter_sus_vimp_InstP.xs0 = init_state[0]
-                self.env.model_class.quarter_sus_vimp_InstP.vs0 = init_state[1]
-                self.env.model_class.quarter_sus_vimp_InstP.xu0 = init_state[2]
-                self.env.model_class.quarter_sus_vimp_InstP.vu0 = init_state[3]
+                self.env.model_class.quarter_sus_imp_force_InstP.xs0 = init_state[0]
+                self.env.model_class.quarter_sus_imp_force_InstP.vs0 = init_state[1]
+                self.env.model_class.quarter_sus_imp_force_InstP.xu0 = init_state[2]
+                self.env.model_class.quarter_sus_imp_force_InstP.vu0 = init_state[3]
 
             # G0 parameter setting - similar to init_state logic
             if init_G0 is None:
                 # Random G0 for training
                 G0_rand = self.rng.uniform(low=self.G0_min, high=self.G0_max)
-                self.env.model_class.quarter_sus_vimp_InstP.G0 = G0_rand
+                self.env.model_class.quarter_sus_imp_force_InstP.G0 = G0_rand
             else:
                 # Specific G0 for evaluation/run
-                self.env.model_class.quarter_sus_vimp_InstP.G0 = init_G0
+                self.env.model_class.quarter_sus_imp_force_InstP.G0 = init_G0
 
-            self.env.model_class.quarter_sus_vimp_InstP.Cs = self.Cs
-            self.env.model_class.quarter_sus_vimp_InstP.Ks = self.Ks
-            self.env.model_class.quarter_sus_vimp_InstP.ms = self.Ms
-            self.env.model_class.quarter_sus_vimp_InstP.mu = self.Mu
-            self.env.model_class.quarter_sus_vimp_InstP.Kt = self.Kt
-            self.env.model_class.quarter_sus_vimp_InstP.f0 = self.f0
-            self.env.model_class.quarter_sus_vimp_InstP.u = self.u
+            self.env.model_class.quarter_sus_imp_force_InstP.Cs = self.Cs
+            self.env.model_class.quarter_sus_imp_force_InstP.Ks = self.Ks
+            self.env.model_class.quarter_sus_imp_force_InstP.ms = self.Ms
+            self.env.model_class.quarter_sus_imp_force_InstP.mu = self.Mu
+            self.env.model_class.quarter_sus_imp_force_InstP.Kt = self.Kt
+            self.env.model_class.quarter_sus_imp_force_InstP.f0 = self.f0
+            self.env.model_class.quarter_sus_imp_force_InstP.u = self.u
             # self.env.model_class.quarter_sus_win_InstP.as_max = self.as_max
             # self.env.model_class.quarter_sus_win_InstP.deflec_max = self.deflec_max
             # self.env.model_class.InstP_quarter_sus_win_T.x_max[:] = self.state_max
@@ -144,15 +144,15 @@ class SimuQuarterSusVimp(gym.Env,):
             # 初始化状态
             
             # self.env.model_class.quarter_sus_win_InstP.road_seed  = self.seed_gen.uniform(low=0, high=10000)
-            self.env.model_class.quarter_sus_vimp_InstP.road_type = self.road_type_dict[self.road_type]
-            # self.env.model_class.quarter_sus_win_InstP.Q_dot = self.Q_dot
-            self.env.model_class.quarter_sus_vimp_InstP.Q_flec = self.Q_flec
-            self.env.model_class.quarter_sus_vimp_InstP.b_deflec = self.b_deflec
-            self.env.model_class.quarter_sus_vimp_InstP.Q_dot_s = self.Q_acc_s
-            self.env.model_class.quarter_sus_vimp_InstP.Q_F = self.Q_F
-            self.env.model_class.quarter_sus_vimp_InstP.Q_flec_t = self.Q_flec_t
-            self.env.model_class.quarter_sus_vimp_InstP.Q_dot_s_h = self.Q_acc_s_h
-            self.env.model_class.quarter_sus_vimp_InstP.Q_b_deflec = self.Q_b_deflec
+            self.env.model_class.quarter_sus_imp_force_InstP.road_type = self.road_type_dict[self.road_type]
+            # self.env.model_class.quarter_sus_imp_force_InstP.Q_dot = self.Q_dot
+            self.env.model_class.quarter_sus_imp_force_InstP.Q_flec = self.Q_flec
+            self.env.model_class.quarter_sus_imp_force_InstP.b_deflec = self.b_deflec
+            self.env.model_class.quarter_sus_imp_force_InstP.Q_dot_s = self.Q_acc_s
+            self.env.model_class.quarter_sus_imp_force_InstP.Q_F = self.Q_F
+            self.env.model_class.quarter_sus_imp_force_InstP.Q_flec_t = self.Q_flec_t
+            self.env.model_class.quarter_sus_imp_force_InstP.Q_dot_s_h = self.Q_acc_s_h
+            self.env.model_class.quarter_sus_imp_force_InstP.Q_b_deflec = self.Q_b_deflec
             # self.env.model_class.quarter_sus_win_InstP.Q_dot_u = self.Q_acc_u
             # self.env.model_class.quarter_sus_win_InstP.punish_R = self.R
 
