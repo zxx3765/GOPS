@@ -25,7 +25,8 @@ class PolicyRunnerCustom(PolicyRunner):
                  action_noise_data = None,
                  use_unified_env_config = True,  # 是否使用统一环境配置
                  eval_G0 = None,  # 评估时指定的G0值
-                 eval_max_step = None):  # 评估时指定的最大步长
+                 eval_max_step = None,  # 评估时指定的最大步长
+                 eval_road_seed = None):  # 评估时指定的随机路面种子
         super().__init__(log_policy_dir_list,
                          trained_policy_iteration_list,
                          save_render, plot_range, is_init_info,
@@ -36,6 +37,7 @@ class PolicyRunnerCustom(PolicyRunner):
         self.use_unified_env_config = use_unified_env_config
         self.eval_G0 = eval_G0  # 评估时使用的固定G0值
         self.eval_max_step = eval_max_step  # 评估时使用的最大步长
+        self.eval_road_seed = eval_road_seed  # 评估时使用的固定随机路面种子
         
     def _load_env_with_unified_config(self, policy_index=0, use_opt=False):
         """
@@ -79,10 +81,24 @@ class PolicyRunnerCustom(PolicyRunner):
         elif self.eval_G0 is not None and self.init_info is None:
             self.init_info = {"init_G0": self.eval_G0}
             print(f"Setting evaluation G0 to: {self.eval_G0}")
+
+    def _update_init_info_with_road_seed(self):
+        """
+        将eval_road_seed添加到init_info中，用于环境reset时指定固定随机路面种子
+        这确保评估时使用相同的随机路面，保证结果可复现
+        """
+        if self.eval_road_seed is not None and self.init_info is not None:
+            self.init_info = self.init_info.copy()
+            self.init_info["init_road_seed"] = self.eval_road_seed
+            print(f"Setting evaluation road seed to: {self.eval_road_seed}")
+        elif self.eval_road_seed is not None and self.init_info is None:
+            self.init_info = {"init_road_seed": self.eval_road_seed}
+            print(f"Setting evaluation road seed to: {self.eval_road_seed}")
     
     def run(self):
-        # 在运行前更新init_info以包含G0参数
+        # 在运行前更新init_info以包含G0和road_seed参数
         self._update_init_info_with_G0()
+        self._update_init_info_with_road_seed()
         self.__run_data_with_passive()
         self._PolicyRunner__save_mp4_as_gif()
         self.draw()

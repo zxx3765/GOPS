@@ -101,8 +101,17 @@ class SimuQuarterSusImpForce(gym.Env,):
         return self.env.model_class.quarter_sus_imp_force_InstP.G0
 
     def reset(
-        self, init_state: Optional[Sequence] = None, init_G0: Optional[float] = None, **kwargs: Any
+        self, init_state: Optional[Sequence] = None, init_G0: Optional[float] = None,
+        init_road_seed: Optional[int] = None, **kwargs: Any
     ) -> Tuple[np.ndarray]:
+        # Generate random road seed before callback
+        # This will be used to set RandSeed after model initialization
+        # If init_road_seed is provided (for evaluation), use it; otherwise generate random seed (for training)
+        if init_road_seed is not None:
+            random_road_seed = np.uint32(init_road_seed)
+        else:
+            random_road_seed = self.rng.integers(0, 2**32 - 1, dtype=np.uint32)
+
         def callback(init_state, init_G0):
             """Custom reset logic goes here."""
             # Modify your parameter
@@ -143,7 +152,9 @@ class SimuQuarterSusImpForce(gym.Env,):
             # self.env.model_class.InstP_quarter_sus_win_T.x_max[:] = self.state_max
             # self.env.model_class.InstP_quarter_sus_win_T.x_min[:] = self.state_min
             # 初始化状态
-            
+
+            # NOTE: The road_seed parameter in InstP is NOT used for random road generation
+            # The actual random seed is in DW.RandSeed, which we randomize above
             # self.env.model_class.quarter_sus_win_InstP.road_seed  = self.seed_gen.uniform(low=0, high=10000)
             self.env.model_class.quarter_sus_imp_force_InstP.road_type = self.road_type_dict[self.road_type]
             # self.env.model_class.quarter_sus_imp_force_InstP.Q_dot = self.Q_dot
@@ -161,6 +172,14 @@ class SimuQuarterSusImpForce(gym.Env,):
         # Reset takes an optional callback
         # This callback will be called after model & parameter initialization and before taking first step.
         state,info = self.env.reset(preinit=lambda: callback(init_state, init_G0))
+
+        # Set RandSeed AFTER reset to override the hardcoded initialization
+        # This ensures each episode gets a different random road profile
+        self.env.model_class.quarter_sus_imp_force_DW.RandSeed = int(random_road_seed)
+        # Also update NextOutput to ensure the first random value uses the new seed
+        # Import the random number generator function (this is internal Simulink code)
+        # For now, we'll just set RandSeed and let it generate the next value on first step
+
         # state = self.reset.callback()
         obs = self.postprocess(state)
         return obs

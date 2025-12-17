@@ -17,16 +17,14 @@ result_path = "D:/Project/GOPS/results/simu_quarter_sus_imp_force/"
 runner = PolicyRunnerCustom(
     log_policy_dir_list=[
                          result_path+"TD3_251202-154807",
-                         result_path+"TD3_251210-193618",
-                         result_path+"TD3_251210-135209",
-                         result_path+"TD3_251212-093413",
-                         result_path+"TD3_251215-144815",],
-    trained_policy_iteration_list=['46071_opt','475536_opt','345892_opt','101421_opt','270374_opt'],
+                         result_path+"TD3_251217-164855",
+                         result_path+"TD3_251217-123859",],
+    trained_policy_iteration_list=['46071_opt','454846_opt','176125_opt'],
     is_init_info=True,
     init_info={"init_state": [0.0, 0.0, 0.0, 0.0], "ref_time": 0.0,
                "ref_num": 3}, # ref_num = [0, 1, 2,..., 7]
     save_render=False,
-    legend_list=['46071_TD3','475536_TD3','345892_TD3','101421_TD3','270374_TD3'],
+    legend_list=['46071_TD3','454846_TD3','176125_TD3'],
     opt_args={
         "opt_controller_type": "OPT",
         "num_pred_step": 10,
@@ -45,6 +43,7 @@ runner = PolicyRunnerCustom(
     dt=0.01,
     use_unified_env_config=True,  # 启用统一环境配置
     eval_G0=0.001024,  # 指定评估时使用的固定G0值 (Class A)
+    eval_road_seed=12345,  # 指定评估时使用的固定随机路面种子，确保结果可复现
     eval_max_step=10000,  # 指定评估时的最大步长，增加采样点数以提高频率分辨率
 )
 
