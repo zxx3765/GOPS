@@ -1,0 +1,13 @@
+*
+!quarter_sus_imp_force
+!quartersuspension_env_2022
+!IFEKF_function
+!*.pyi
+!.gitignore
+!env.toml
+!model.toml
+!*.slx
+!*.m
+!*.bat
+!*.so
+!setup_fixbug.py

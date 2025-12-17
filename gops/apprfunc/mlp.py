@@ -25,12 +25,14 @@ __all__ = [
     "StochaPolicyDis",
     "StateValue",
     "ActionValueCustom",
+    "ActionValueCustomTwoStream",
 ]
 
 import numpy as np
 import torch
 import warnings
 import torch.nn as nn
+import torch.nn.functional as F
 from gops.utils.common_utils import get_activation_func
 from gops.utils.act_distribution_cls import Action_Distribution
 
@@ -326,7 +328,69 @@ class ActionValueCustom(nn.Module, Action_Distribution):
         q = self.q2(q)
         return torch.squeeze(q, -1)
 
+class ActionValueCustomTwoStream(nn.Module, Action_Distribution):
+    """
+    Approximated function of action-value function based on the provided diagram.
+    Structure:
+      - State path: Linear(obs -> 400) -> ReLU -> Linear(400 -> 300)
+      - Action path: Linear(act -> 300)
+      - Fusion: (State_path_out + Action_path_out) -> ReLU
+      - Output: Linear(300 -> 1)
+    """
 
+    def __init__(self, **kwargs):
+        super().__init__()
+        obs_dim = kwargs["obs_dim"]
+        act_dim = kwargs["act_dim"]
+        
+        # --- 1. 状态特征提取 (借鉴新版: 宽网络) ---
+        self.l1_s = nn.Linear(obs_dim, 128)
+        self.l2_s = nn.Linear(128, 64)
+        
+        # --- 2. 动作特征映射 (可选，建议保留以匹配维度) ---
+        self.l1_a = nn.Linear(act_dim, 64)
+        
+        # --- 3. 融合后的深度交互层 (借鉴旧版: 拼接后多层MLP) ---
+        # 输入维度 = State特征(300) + Action特征(300) = 600
+        self.l3 = nn.Linear(128, 128) 
+        self.l4 = nn.Linear(128, 64) # 这一层非常关键，用于学习 s 和 a 的耦合
+        self.output = nn.Linear(64, 1)
+
+        # 兼容接口
+        if "action_distribution_cls" in kwargs:
+            self.action_distribution_cls = kwargs["action_distribution_cls"]
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                torch.nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    torch.nn.init.zeros_(module.bias)
+
+    def forward(self, obs, act):
+        # --- State Path ---
+        h_s = F.relu(self.l1_s(obs))
+        h_s = F.relu(self.l2_s(h_s)) # 注意：这里建议加一层激活，增强非线性
+        
+        # --- Action Path ---
+        h_a = F.relu(self.l1_a(act)) # 对动作也做非线性映射
+        
+        # --- Fusion: Concatenation (拼接) ---
+        # 拼接比加法更适合表达 "当状态是A且动作为B时..." 这种逻辑
+        h = torch.cat([h_s, h_a], dim=-1)
+        
+        # --- Post-Fusion Interaction ---
+        h = F.relu(self.l3(h))
+        h = F.relu(self.l4(h))
+        
+        # Output
+        q = self.output(h)
+        
+        return torch.squeeze(q, -1)
+
+    
 class ActionValueDis(nn.Module, Action_Distribution):
     """
     Approximated function of action-value function for discrete action space.

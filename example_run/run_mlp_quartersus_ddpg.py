@@ -16,13 +16,18 @@ import numpy as np
 result_path = "D:/Project/GOPS/results/simu_quarter_sus_win/"
 runner = PolicyRunnerCustom(
     log_policy_dir_list=[
-                         result_path+"DDPGCustom_250831-080656",],
-    trained_policy_iteration_list=['409000_opt',],
+                         result_path+"PPO_250905-215910",
+                         result_path+"SAC_251201-145010",
+                         result_path+"TD3_251201-154904",
+                         result_path+"TD3_251201-163805",
+                         result_path+"TD3_251201-201929",
+                         result_path+"SAC_251201-210322",],
+    trained_policy_iteration_list=['633_opt','13000_opt','2708_opt','7170_opt','7954_opt','11200_opt'],
     is_init_info=True,
     init_info={"init_state": [0.0, 0.0, 0.0, 0.0], "ref_time": 0.0,
                "ref_num": 3}, # ref_num = [0, 1, 2,..., 7]
     save_render=False,
-    legend_list=["409000_opt"],
+    legend_list=["633_PPO",'13000_SAC','2708_TD3','7170_TD3','7954_TD3','11200_SAC'],
     opt_args={
         "opt_controller_type": "OPT",
         "num_pred_step": 10,
@@ -39,6 +44,9 @@ runner = PolicyRunnerCustom(
     constrained_env=False,
     is_tracking=False,
     dt=0.01,
+    use_unified_env_config=True,  # 启用统一环境配置
+    eval_G0=0.001024,  # 指定评估时使用的固定G0值 (Class A)
+    eval_max_step=10000,  # 指定评估时的最大步长，增加采样点数以提高频率分辨率
 )
 
 runner.run()

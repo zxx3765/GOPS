@@ -29,7 +29,7 @@ from export_onnx import check_onnx_compatibility, export_onnx_model, validate_on
 class Py2ONNXRunner:
     """
     GOPS工具：将训练好的策略导出为ONNX格式用于Simulink仿真
-    
+
     Args:
         log_policy_dir_list: 训练策略的加载路径列表
         trained_policy_iteration_list: 对应的训练策略迭代步数列表
@@ -37,6 +37,7 @@ class Py2ONNXRunner:
         save_path: 保存路径列表，建议与Simulink项目文件在同一目录
         export_format: 导出格式，'onnx'或'torchscript'，默认'onnx'
         opset_version: ONNX操作集版本，默认11
+        custom_validation_input: 可选的自定义验证输入，用于与MATLAB对比
     """
 
     def __init__(
@@ -47,6 +48,7 @@ class Py2ONNXRunner:
         save_path: list,
         export_format: str = "onnx",
         opset_version: int = 11,
+        custom_validation_input: np.ndarray = None,
     ) -> None:
         self.log_policy_dir_list = log_policy_dir_list
         self.trained_policy_iteration_list = trained_policy_iteration_list
@@ -54,9 +56,11 @@ class Py2ONNXRunner:
         self.save_path = save_path
         self.export_format = export_format.lower()
         self.opset_version = opset_version
-        
+        self.custom_validation_input = custom_validation_input
+
         self.args = None
         self.policy_num = len(self.log_policy_dir_list)
+        self.validation_results = []  # 存储验证结果
         
         # 验证输入参数
         if self.policy_num != len(self.trained_policy_iteration_list):
@@ -138,7 +142,7 @@ class Py2ONNXRunner:
         return sampler
 
     def _export_single_policy(self, policy_idx: int):
-        """导出单个策略"""
+        """导出单个策略并返回验证结果"""
         log_policy_dir = self.log_policy_dir_list[policy_idx]
         trained_policy_iteration = self.trained_policy_iteration_list[policy_idx]
         controller_name = self.export_controller_name[policy_idx]
@@ -153,7 +157,7 @@ class Py2ONNXRunner:
         print(f"{'='*60}")
 
         self.args = self.args_list[policy_idx]
-        
+
         # 加载组件
         networks = self._load_policy(log_policy_dir, trained_policy_iteration)
         sampler = self._load_sampler()
@@ -167,29 +171,53 @@ class Py2ONNXRunner:
         else:
             # 旧格式：直接返回observation
             example_obs_row = reset_result
+
+        # 转换为torch tensor并确保是2维（batch格式）
         example_obs = torch.from_numpy(example_obs_row).float()
-        
+        if example_obs.dim() == 1:
+            example_obs = example_obs.unsqueeze(0)  # 添加batch维度
+
         # 确保保存目录存在
         os.makedirs(save_dir, exist_ok=True)
-        
+
+        validation_result = None
         if self.export_format == "onnx":
             save_path = os.path.join(save_dir, f"{controller_name}.onnx")
-            self._export_onnx_model(model, example_obs, save_path)
+            validation_result = self._export_onnx_model(model, example_obs, save_path)
         else:  # torchscript
             save_path = os.path.join(save_dir, f"{controller_name}.pt")
             self._export_torchscript_model(model, example_obs, save_path)
 
+        return validation_result
+
     def _export_onnx_model(self, model, example_obs, save_path):
-        """导出ONNX模型"""
+        """导出ONNX模型并进行验证"""
         print(f"检查ONNX兼容性...")
-        check_onnx_compatibility(model, example_obs)
-        
+        compat_result = check_onnx_compatibility(model, example_obs)
+
         print(f"导出ONNX模型...")
         export_onnx_model(model, example_obs, save_path, self.opset_version)
-        
-        # 验证导出的模型
-        print(f"验证导出的ONNX模型...")
-        validate_onnx_model(save_path, example_obs.numpy())
+
+        # 使用自定义输入验证导出的模型（如果提供）
+        if self.custom_validation_input is not None:
+            print(f"使用自定义输入验证导出的ONNX模型...")
+            validation_result = validate_onnx_model(
+                save_path,
+                self.custom_validation_input,
+                pytorch_model=model
+            )
+            self.validation_results.append(validation_result)
+            return validation_result
+        else:
+            # 使用默认示例输入验证
+            print(f"验证导出的ONNX模型...")
+            validation_result = validate_onnx_model(
+                save_path,
+                example_obs.numpy(),
+                pytorch_model=model
+            )
+            self.validation_results.append(validation_result)
+            return validation_result
 
     def _export_torchscript_model(self, model, example_obs, save_path):
         """导出TorchScript模型（保留原功能）"""

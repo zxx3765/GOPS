@@ -14,7 +14,7 @@
 """
 
 # Quarter-Car Suspension 统一环境参数
-UNIFIED_QUARTER_SUSPENSION_CONFIG = {
+UNIFIED_SUSPENSION_FORCE_CONFIG = {
     # 物理参数
     "Cs": 2000.0,      # 阻尼系数 (N⋅s/m)
     "Ks": 20000.0,     # 弹簧系数 (N/m) 
@@ -23,7 +23,68 @@ UNIFIED_QUARTER_SUSPENSION_CONFIG = {
     "Kt": 200000.0,    # 轮胎刚度 (N/m)
     
     # 道路参数
-    "G0": 0.001256,    # 随机路面参数 (Class A)
+    "G0": 0.001024,    # 随机路面参数 (Class A)
+    "G0_min": 0.0001,  # 训练时G0最小值
+    "G0_max": 0.002,   # 训练时G0最大值
+    "f0": 0.1,
+    "u": 20.0,         # 车速 (m/s)
+    "Road_Type": "Random",  # 道路类型: Sine/Chirp/Random/Bump
+    "road_seed": 827538,    # 道路随机种子
+    
+    # 控制约束
+    "act_max": 1000,    # 最大控制力 (N)
+    "as_max": 1,        # 簧载质量最大加速度 (m/s²)
+    "deflec_max": 0.04, # 最大悬架变形 (m)
+    
+    # 仿真参数
+    "Max_step": 10000,   # 每个episode最大步数
+    "act_repeat": 10,   # 动作重复次数
+    "dt": 0.01,         # 时间步长 (s)
+    
+    # 缩放参数
+    "obs_scaling": [5, 1, 0.03, 0.3],  # 观测缩放
+    "act_scaling": 0.001,               # 动作缩放
+    "rew_scaling": 1,                   # 奖励缩放
+    
+    # 奖励函数权重
+    "punish_Q_acc_s": 7,      # 簧载质量加速度惩罚权重
+    "punish_Q_flec": 1,       # 悬架变形惩罚权重  
+    "punish_Q_F": 1,          # 控制力惩罚权重
+    "punish_Q_flec_t": 1,     # 轮胎变形惩罚权重
+    "punish_Q_acc_s_h": 2.5,  # 高频簧载质量加速度惩罚权重
+    "punish_b_deflec": 0.04,  # 变形边界参数
+    "punish_Q_b_defelc": -100, # 边界惩罚权重
+    
+    # 初始状态范围 [xs0, vs0, xu0, vu0]
+    "init_state_max": [0.01, 0.1, 0.01, 0.1],
+    "init_state_min": [-0.01, -0.1, -0.01, -0.1],
+    
+    # 随机化参数
+    "rand_bias": [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
+    "rand_center": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    
+    # 其他环境设置
+    "action_type": "continu",
+    "is_render": False,
+    "is_adversary": False,
+    "is_constrained": False,
+    "punish_done": 0.0,
+    "rew_bias": 0,
+    "rew_bound": 100.0,
+}
+
+UNIFIED_SUSPENSION_IMP_CONFIG = {
+    # 物理参数
+    "Cs": 2000.0,      # 阻尼系数 (N⋅s/m)
+    "Ks": 20000.0,     # 弹簧系数 (N/m) 
+    "Ms": 400.0,       # 簧载质量 (kg)
+    "Mu": 50.0,        # 非簧载质量 (kg) - 注意：统一为50.0而不是40.0
+    "Kt": 200000.0,    # 轮胎刚度 (N/m)
+    
+    # 道路参数
+    "G0": 0.001024,    # 随机路面参数 (Class A)
+    "G0_min": 0.0001,  # 训练时G0最小值
+    "G0_max": 0.002,   # 训练时G0最大值
     "f0": 0.1,
     "u": 20.0,         # 车速 (m/s)
     "Road_Type": "Random",  # 道路类型: Sine/Chirp/Random/Bump
@@ -41,7 +102,7 @@ UNIFIED_QUARTER_SUSPENSION_CONFIG = {
     
     # 缩放参数
     "obs_scaling": [5, 1, 0.03, 0.3],  # 观测缩放
-    "act_scaling": 0.001,               # 动作缩放
+    "act_scaling": [1,1000,10000],              # 动作缩放
     "rew_scaling": 1,                   # 奖励缩放
     
     # 奖励函数权重
@@ -50,7 +111,7 @@ UNIFIED_QUARTER_SUSPENSION_CONFIG = {
     "punish_Q_F": 1,          # 控制力惩罚权重
     "punish_Q_flec_t": 1,     # 轮胎变形惩罚权重
     "punish_Q_acc_s_h": 2.5,  # 高频簧载质量加速度惩罚权重
-    "punish_b_deflec": 0.01,  # 变形边界参数
+    "punish_b_deflec": 0.04,  # 变形边界参数
     "punish_Q_b_defelc": -100, # 边界惩罚权重
     
     # 初始状态范围 [xs0, vs0, xu0, vu0]
@@ -82,7 +143,11 @@ def get_unified_config(env_id="simu_quarter_sus_win"):
         dict: 统一的环境配置参数
     """
     if env_id == "simu_quarter_sus_win":
-        return UNIFIED_QUARTER_SUSPENSION_CONFIG.copy()
+        return UNIFIED_SUSPENSION_FORCE_CONFIG.copy()
+    elif env_id == "simu_quarter_sus_vimp":
+        return UNIFIED_SUSPENSION_IMP_CONFIG.copy()
+    elif env_id == "simu_quarter_sus_imp_force":
+        return UNIFIED_SUSPENSION_FORCE_CONFIG.copy()
     else:
         raise ValueError(f"Unified config for environment '{env_id}' is not implemented yet")
 

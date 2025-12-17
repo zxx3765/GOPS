@@ -10,8 +10,9 @@ GUI版本的GOPS策略ONNX导出工具
 """
 
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, ttk, scrolledtext
 import os
+import numpy as np
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 from py2onnx import Py2ONNXRunner
 
@@ -19,9 +20,9 @@ class ONNXExportGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("GOPS 策略 ONNX 导出工具")
-        self.root.geometry("600x600")
+        self.root.geometry("800x900")
         self.root.resizable(True, True)
-        
+
         # 变量
         self.policy_dir = tk.StringVar()
         self.iteration = tk.StringVar(value="6078_opt")
@@ -29,7 +30,8 @@ class ONNXExportGUI:
         self.save_path = tk.StringVar()
         self.export_format = tk.StringVar(value="onnx")
         self.opset_version = tk.StringVar(value="11")
-        
+        self.validation_input = tk.StringVar(value="")  # 自定义验证输入
+
         self.setup_ui()
         
     def setup_ui(self):
@@ -77,37 +79,59 @@ class ONNXExportGUI:
         ttk.Label(main_frame, text="OPSET版本:").grid(row=7, column=0, sticky=tk.W, pady=5)
         opset_entry = ttk.Entry(main_frame, textvariable=self.opset_version, width=10)
         opset_entry.grid(row=7, column=1, sticky=tk.W, padx=5, pady=5)
-        
+
+        # 验证输入框
+        ttk.Label(main_frame, text="验证输入:").grid(row=8, column=0, sticky=tk.W, pady=5)
+        validation_entry = ttk.Entry(main_frame, textvariable=self.validation_input, width=50)
+        validation_entry.grid(row=8, column=1, padx=5, pady=5)
+
+        # 验证输入说明
+        validation_help = ttk.Label(main_frame,
+                                   text="可选：输入numpy数组格式，如 [0.1, 0.2, 0.3] 或留空使用默认值",
+                                   font=("Arial", 8), foreground="gray")
+        validation_help.grid(row=9, column=1, sticky=tk.W, padx=5, pady=(0, 10))
+
         # 分隔线
-        ttk.Separator(main_frame, orient='horizontal').grid(row=8, column=0, columnspan=3, 
+        ttk.Separator(main_frame, orient='horizontal').grid(row=10, column=0, columnspan=3,
                                                            sticky=(tk.W, tk.E), pady=20)
-        
+
         # 快速设置按钮
         quick_frame = ttk.LabelFrame(main_frame, text="快速设置", padding="10")
-        quick_frame.grid(row=9, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
-        
-        ttk.Button(quick_frame, text="设置为DDPG默认", 
+        quick_frame.grid(row=11, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+
+        ttk.Button(quick_frame, text="设置为DDPG默认",
                   command=self.set_ddpg_default).grid(row=0, column=0, padx=5)
-        ttk.Button(quick_frame, text="设置为PPO默认", 
+        ttk.Button(quick_frame, text="设置为PPO默认",
                   command=self.set_ppo_default).grid(row=0, column=1, padx=5)
-        ttk.Button(quick_frame, text="清空所有", 
+        ttk.Button(quick_frame, text="清空所有",
                   command=self.clear_all).grid(row=0, column=2, padx=5)
-        
+
         # 导出按钮
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=10, column=0, columnspan=3, pady=20)
-        
-        ttk.Button(button_frame, text="开始导出", command=self.export_model, 
+        button_frame.grid(row=12, column=0, columnspan=3, pady=20)
+
+        ttk.Button(button_frame, text="开始导出", command=self.export_model,
                   style="Accent.TButton").pack(side=tk.LEFT, padx=10)
         ttk.Button(button_frame, text="退出", command=self.root.quit).pack(side=tk.LEFT, padx=10)
-        
+
+        # 验证结果显示区域
+        result_frame = ttk.LabelFrame(main_frame, text="验证结果", padding="10")
+        result_frame.grid(row=13, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+
+        self.result_text = scrolledtext.ScrolledText(result_frame, height=10, width=90,
+                                                     font=("Courier", 9), wrap=tk.WORD)
+        self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        result_frame.rowconfigure(0, weight=1)
+        result_frame.columnconfigure(0, weight=1)
+
         # 状态栏
         self.status_var = tk.StringVar(value="准备就绪")
         status_bar = ttk.Label(main_frame, textvariable=self.status_var, relief=tk.SUNKEN)
-        status_bar.grid(row=11, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(10, 0))
+        status_bar.grid(row=14, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(10, 0))
         
         # 配置权重
         main_frame.columnconfigure(1, weight=1)
+        main_frame.rowconfigure(13, weight=1)  # 让验证结果区域可以扩展
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         
@@ -155,6 +179,69 @@ class ONNXExportGUI:
         self.export_format.set("onnx")
         self.status_var.set("已设置PPO默认参数")
         
+    def parse_validation_input(self):
+        """解析验证输入"""
+        input_str = self.validation_input.get().strip()
+        if not input_str:
+            return None
+
+        try:
+            # 尝试将输入解析为numpy数组
+            # 支持格式：[1,2,3] 或 [[1,2,3]]
+            input_array = eval(input_str)
+            if isinstance(input_array, (list, tuple)):
+                input_array = np.array(input_array, dtype=np.float32)
+                # 确保至少是2D数组
+                if input_array.ndim == 1:
+                    input_array = input_array.reshape(1, -1)
+                return input_array
+            else:
+                raise ValueError("输入必须是列表或元组格式")
+        except Exception as e:
+            messagebox.showerror("输入格式错误",
+                               f"无法解析验证输入:\n{str(e)}\n\n"
+                               "请使用格式如: [0.1, 0.2, 0.3]")
+            return False  # 返回False表示解析失败
+
+    def display_validation_results(self, validation_result):
+        """显示验证结果"""
+        self.result_text.delete(1.0, tk.END)
+
+        if validation_result is None:
+            self.result_text.insert(tk.END, "未进行验证（仅支持ONNX格式）\n")
+            return
+
+        # 显示输入
+        self.result_text.insert(tk.END, "=" * 70 + "\n")
+        self.result_text.insert(tk.END, "验证输入:\n")
+        self.result_text.insert(tk.END, f"{validation_result['input']}\n\n")
+
+        # 显示PyTorch输出
+        if 'pytorch_output' in validation_result:
+            self.result_text.insert(tk.END, "PyTorch模型输出:\n")
+            self.result_text.insert(tk.END, f"{validation_result['pytorch_output']}\n\n")
+
+        # 显示ONNX输出
+        self.result_text.insert(tk.END, "ONNX模型输出:\n")
+        self.result_text.insert(tk.END, f"{validation_result['onnx_output']}\n\n")
+
+        # 显示对比结果
+        if 'max_diff' in validation_result:
+            self.result_text.insert(tk.END, "=" * 70 + "\n")
+            self.result_text.insert(tk.END, "对比结果:\n")
+            self.result_text.insert(tk.END, f"最大差异: {validation_result['max_diff']:.10f}\n")
+            self.result_text.insert(tk.END, f"验证通过: {'✓ 是' if validation_result['passed'] else '✗ 否'}\n")
+            self.result_text.insert(tk.END, "=" * 70 + "\n\n")
+
+        # 显示MATLAB使用提示
+        self.result_text.insert(tk.END, "MATLAB验证代码:\n")
+        self.result_text.insert(tk.END, "% 在MATLAB中使用相同的输入验证:\n")
+        matlab_input = np.array2string(validation_result['input'],
+                                      separator=', ',
+                                      formatter={'float': lambda x: f"{x:.10f}"})
+        self.result_text.insert(tk.END, f"input = {matlab_input};\n")
+        self.result_text.insert(tk.END, f"% 使用您的ONNX模型进行推理并比较输出\n")
+
     def clear_all(self):
         """清空所有输入"""
         self.policy_dir.set("")
@@ -163,6 +250,8 @@ class ONNXExportGUI:
         self.save_path.set("")
         self.export_format.set("onnx")
         self.opset_version.set("11")
+        self.validation_input.set("")
+        self.result_text.delete(1.0, tk.END)
         self.status_var.set("已清空所有参数")
         
     def validate_inputs(self):
@@ -199,11 +288,16 @@ class ONNXExportGUI:
         """导出模型"""
         if not self.validate_inputs():
             return
-            
+
+        # 解析验证输入
+        custom_input = self.parse_validation_input()
+        if custom_input is False:  # 解析失败
+            return
+
         try:
             self.status_var.set("正在导出模型...")
             self.root.update()
-            
+
             # 创建导出器
             runner = Py2ONNXRunner(
                 log_policy_dir_list=[self.policy_dir.get()],
@@ -212,27 +306,32 @@ class ONNXExportGUI:
                 save_path=[self.save_path.get()],
                 export_format=self.export_format.get(),
                 opset_version=int(self.opset_version.get()),
+                custom_validation_input=custom_input,
             )
-            
+
             # 执行导出
             runner.export_policies()
-            
+
+            # 显示验证结果
+            if runner.validation_results:
+                self.display_validation_results(runner.validation_results[0])
+
             # 生成文件路径
             file_extension = ".onnx" if self.export_format.get() == "onnx" else ".pt"
-            output_file = os.path.join(self.save_path.get(), 
+            output_file = os.path.join(self.save_path.get(),
                                      f"{self.controller_name.get()}{file_extension}")
-            
+
             self.status_var.set(f"导出成功！")
-            
+
             # 显示成功消息
             result = messagebox.askyesno(
-                "导出成功", 
+                "导出成功",
                 f"模型已成功导出为:\n{output_file}\n\n是否要打开保存目录？"
             )
-            
+
             if result:
                 os.startfile(self.save_path.get())
-                
+
         except Exception as e:
             self.status_var.set("导出失败")
             messagebox.showerror("导出失败", f"导出过程中发生错误:\n{str(e)}")

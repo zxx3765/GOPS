@@ -120,7 +120,7 @@ class TD3(AlgorithmBase):
                 data["obs2"],
                 data["done"],
             )
-            loss_q, loss_q1, loss_q2 = self._compute_loss_q(o, a, r, o2, d)
+            loss_q, loss_q1, loss_q2, avg_q1, avg_q2 = self._compute_loss_q(o, a, r, o2, d)
             loss_q.backward()
         else:
             o, a, r, o2, d, idx, weight = (
@@ -132,7 +132,7 @@ class TD3(AlgorithmBase):
                 data["idx"],
                 data["weight"],
             )
-            loss_q, loss_q1, loss_q2, abs_err = self._compute_loss_q_per(
+            loss_q, loss_q1, loss_q2, abs_err, avg_q1, avg_q2 = self._compute_loss_q_per(
                 o, a, r, o2, d, idx, weight
             )
             loss_q.backward()
@@ -153,6 +153,9 @@ class TD3(AlgorithmBase):
         end_time = time.time()
         tb_info[tb_tags["loss_critic"]] = loss_q.item()
         tb_info[tb_tags["critic_avg_value"]] = torch.mean(loss_q).item()
+        tb_info["Train/Critic avg Q1-RL iter"] = avg_q1.item()
+        tb_info["Train/Critic avg Q2-RL iter"] = avg_q2.item()
+        tb_info["Train/Critic avg Q diff-RL iter"] = (avg_q1 - avg_q2).item()
         tb_info[tb_tags["alg_time"]] = (end_time - start_time) * 1000  # ms
         tb_info[tb_tags["loss_actor"]] = loss_policy.item()
 
@@ -189,7 +192,7 @@ class TD3(AlgorithmBase):
         loss_q2 = ((q2 - backup) ** 2).mean()
         loss_q = loss_q1 + loss_q2
 
-        return loss_q, loss_q1, loss_q2
+        return loss_q, loss_q1, loss_q2, torch.mean(q1), torch.mean(q2)
 
     def _compute_loss_q_per(self, o, a, r, o2, d, idx, weight):
         q1 = self.networks.q1(o, a)
@@ -220,7 +223,7 @@ class TD3(AlgorithmBase):
         loss_q = loss_q1 + loss_q2
         abs_err = torch.abs(q1 - backup)
 
-        return loss_q, loss_q1, loss_q2, abs_err
+        return loss_q, loss_q1, loss_q2, abs_err, torch.mean(q1), torch.mean(q2)
 
     def _compute_loss_pi(self, o):
         q1_pi = self.networks.q1(o, self.networks.policy(o))
