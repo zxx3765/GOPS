@@ -100,7 +100,7 @@ class GymEnvVec:
         ...
 class QuarterSusImpForce:
     class B_quarter_sus_imp_force_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype([('Constant', '<f8'), ('Constant3', '<f8'), ('Constant1', '<f8'), ('vs', '<f8'), ('Constant2', '<f8'), ('vu', '<f8'), ('Gain3', '<f8'), ('MultiportSwitch1', '<f8', (4,)), ('Product', '<f8'), ('Product1', '<f8'), ('Gain2', '<f8'), ('Saturation2', '<f8'), ('as', '<f8'), ('au', '<f8'), ('Add2_h4ek', '<f8'), ('Gain3_fze5', '<f8'), ('a1', '<f8'), ('Gain_epcx', '<f8'), ('Add', '<f8'), ('x_k_1', '<f8', (5,))])
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype([('Constant', '<f8'), ('Constant3', '<f8'), ('Constant1', '<f8'), ('vs', '<f8'), ('Constant2', '<f8'), ('vu', '<f8'), ('Gain3', '<f8'), ('MultiportSwitch1', '<f8', (4,)), ('Product', '<f8'), ('Product1', '<f8'), ('Gain2', '<f8'), ('Saturation2', '<f8'), ('as', '<f8'), ('au', '<f8'), ('reward_accs', '<f8'), ('reward_tire', '<f8'), ('Memory1', '<f8'), ('reward_F', '<f8'), ('Add2_h4ek', '<f8'), ('Gain3_fze5', '<f8'), ('a1', '<f8'), ('Gain_epcx', '<f8'), ('Add', '<f8'), ('x_k_1', '<f8', (5,))])
         def __copy__(self) -> QuarterSusImpForce.B_quarter_sus_imp_force_T:
             ...
         def __deepcopy__(self, memo: dict) -> QuarterSusImpForce.B_quarter_sus_imp_force_T:
@@ -172,6 +172,12 @@ class QuarterSusImpForce:
         def Gain_epcx(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
+        def Memory1(self) -> float:
+            ...
+        @Memory1.setter
+        def Memory1(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
         def MultiportSwitch1(self) -> numpy.typing.NDArray[numpy.float64]:
             ...
         @property
@@ -209,6 +215,24 @@ class QuarterSusImpForce:
             ...
         @au.setter
         def au(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def reward_F(self) -> float:
+            ...
+        @reward_F.setter
+        def reward_F(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def reward_accs(self) -> float:
+            ...
+        @reward_accs.setter
+        def reward_accs(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def reward_tire(self) -> float:
+            ...
+        @reward_tire.setter
+        def reward_tire(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def vs(self) -> float:
@@ -392,7 +416,7 @@ class QuarterSusImpForce:
         def rew(self, arg0: typing.SupportsFloat) -> None:
             ...
     class InstP_quarter_sus_imp_force_T:
-        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['Cs', 'G0', 'Ks', 'Kt', 'Q_F', 'Q_b_deflec', 'Q_dot_s', 'Q_dot_s_h', 'Q_flec', 'Q_flec_t', 'a_max', 'a_min', 'b_deflec', 'bump_height', 'bump_lenth', 'bump_start', 'f0', 'ms', 'mu', 'omega_1', 'omega_3', 'omega_4', 'sine_amp', 'sine_freq', 'u', 'vs0', 'vu0', 'xs0', 'xu0', 'road_type'], 'formats': ['<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', 'i1'], 'offsets': [0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232], 'itemsize': 240})
+        dtype: typing.ClassVar[numpy.dtype[numpy.void]]  # value = dtype({'names': ['Cs', 'G0', 'Ks', 'Kt', 'Q_F', 'Q_b_deflec', 'Q_delta_F', 'Q_dot_s', 'Q_dot_s_h', 'Q_flec', 'Q_flec_t', 'a_max', 'a_min', 'b_deflec', 'bump_height', 'bump_lenth', 'bump_start', 'f0', 'ms', 'mu', 'omega_1', 'omega_3', 'omega_4', 'omega_5', 'sine_amp', 'sine_freq', 'u', 'vs0', 'vu0', 'xs0', 'xu0', 'road_type'], 'formats': ['<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', '<f8', 'i1'], 'offsets': [0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248], 'itemsize': 256})
         def __copy__(self) -> QuarterSusImpForce.InstP_quarter_sus_imp_force_T:
             ...
         def __deepcopy__(self, memo: dict) -> QuarterSusImpForce.InstP_quarter_sus_imp_force_T:
@@ -438,6 +462,12 @@ class QuarterSusImpForce:
             ...
         @Q_b_deflec.setter
         def Q_b_deflec(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def Q_delta_F(self) -> float:
+            ...
+        @Q_delta_F.setter
+        def Q_delta_F(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def Q_dot_s(self) -> float:
@@ -534,6 +564,12 @@ class QuarterSusImpForce:
             ...
         @omega_4.setter
         def omega_4(self, arg0: typing.SupportsFloat) -> None:
+            ...
+        @property
+        def omega_5(self) -> float:
+            ...
+        @omega_5.setter
+        def omega_5(self, arg0: typing.SupportsFloat) -> None:
             ...
         @property
         def road_type(self) -> int:
@@ -720,4 +756,4 @@ class RawEnvVec:
     def step(self, action: numpy.typing.NDArray[QuarterSusImpForce.ExtU_quarter_sus_imp_force_T], indices: numpy.typing.NDArray[numpy.int64]) -> numpy.typing.NDArray[QuarterSusImpForce.ExtY_quarter_sus_imp_force_T]:
         ...
 __author__: str = 'hjzsj'
-__version__: str = '15.104'
+__version__: str = '15.108'

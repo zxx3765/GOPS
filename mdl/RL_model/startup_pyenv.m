@@ -1,0 +1,1 @@
+pyenv('Version', 'G:\Anaconda\envs\gops2\python.exe');

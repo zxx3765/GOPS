@@ -44,7 +44,7 @@ if __name__ == "__main__":
     parser.add_argument("--act_repeat", type=int, default=10)
     parser.add_argument("--obs_scaling", type=list, default=[5, 1, 0.03,0.3])
     parser.add_argument("--act_scaling", type=float, default=0.001)
-    parser.add_argument("--rew_scaling", type=float, default=1)
+    parser.add_argument("--rew_scaling", type=float, default=0.2)
     parser.add_argument("--act_max", type=float, default=1000)
     parser.add_argument("--punish_done", type=float, default=0.0)
     parser.add_argument("--rew_bias", type=float, default=0)
@@ -79,15 +79,16 @@ if __name__ == "__main__":
     parser.add_argument("--punish_b_deflec", type=float, default=0.025)
     parser.add_argument("--punish_Q_flec", type=float, default=10)
     parser.add_argument("--punish_Q_F", type=float, default=1)
+    parser.add_argument("--punish_Q_delta_F", type=float, default=5)
     parser.add_argument("--punish_Q_flec_t", type=float, default=1)
     parser.add_argument("--punish_Q_acc_s_h", type=float, default=2.5)
-    parser.add_argument("--punish_Q_b_defelc", type=float, default=-100)
+    parser.add_argument("--punish_Q_b_defelc", type=float, default=-80)
     ################################################
     # 2.1 Parameters of value approximate function
     parser.add_argument(
         "--value_func_name",
         type=str,
-        default="ActionValue",
+        default="ActionValueCustomTwoStream",
         help="Options: StateValue/ActionValue/ActionValueDis/ActionValueDistri",
     )
     parser.add_argument("--value_func_type", type=str, default="MLP", help="Options: MLP/CNN/CNN_SHARED/RNN/POLY/GAUSS")
@@ -123,7 +124,7 @@ if __name__ == "__main__":
     
     ################################################
     # 3. Parameters for RL algorithm
-    parser.add_argument("--tau", type=float, default=0.05)
+    parser.add_argument("--tau", type=float, default=0.005)
     parser.add_argument("--value_learning_rate", type=float, default=1e-3)
     parser.add_argument("--policy_learning_rate", type=float, default=1e-3)
 
@@ -145,7 +146,7 @@ if __name__ == "__main__":
         "--buffer_name", type=str, default="replay_buffer", help="Options:replay_buffer/prioritized_replay_buffer"
     )
     # Size of collected samples before training
-    parser.add_argument("--buffer_warm_size", type=int, default=int(1e3))
+    parser.add_argument("--buffer_warm_size", type=int, default=int(2e3))
     # Max size of reply buffer
     parser.add_argument("--buffer_max_size", type=int, default=int(1e5))
     # Batch size of replay samples from buffer
@@ -175,7 +176,7 @@ if __name__ == "__main__":
     # 7. Data savings
     parser.add_argument("--save_folder", type=str, default=None)
     # Save value/policy every N updates
-    parser.add_argument("--apprfunc_save_interval", type=int, default=2000)
+    parser.add_argument("--apprfunc_save_interval", type=int, default=5000)
     # Save key info every N updates
     parser.add_argument("--log_save_interval", type=int, default=100)
 

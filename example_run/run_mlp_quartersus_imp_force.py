@@ -16,16 +16,17 @@ import numpy as np
 result_path = "D:/Project/GOPS/results/simu_quarter_sus_imp_force/"
 runner = PolicyRunnerCustom(
     log_policy_dir_list=[
-                         result_path+"TD3_251202-104438",
-                         result_path+"TD3_251202-105503",
-                         result_path+"TD3_251202-124624",
-                         result_path+"TD3_251202-143843",],
-    trained_policy_iteration_list=['7603_opt','34401_opt','42163_opt','26774_opt'],
+                         result_path+"TD3_251202-154807",
+                         result_path+"TD3_251210-193618",
+                         result_path+"TD3_251210-135209",
+                         result_path+"TD3_251212-093413",
+                         result_path+"TD3_251215-144815",],
+    trained_policy_iteration_list=['46071_opt','475536_opt','345892_opt','101421_opt','270374_opt'],
     is_init_info=True,
     init_info={"init_state": [0.0, 0.0, 0.0, 0.0], "ref_time": 0.0,
                "ref_num": 3}, # ref_num = [0, 1, 2,..., 7]
     save_render=False,
-    legend_list=["7603_TD3",'34401_TD3','42163_TD3','26774_TD3'],
+    legend_list=['46071_TD3','475536_TD3','345892_TD3','101421_TD3','270374_TD3'],
     opt_args={
         "opt_controller_type": "OPT",
         "num_pred_step": 10,

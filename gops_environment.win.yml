@@ -1,12 +1,12 @@
-name: gops
+name: gops2
 
 channels:
   - defaults
 
 dependencies:
-  - python=3.8
+  - python=3.9
   - numpy>1.16.0
-  - ray-default>=1.0.0
+  - ray-default==2.7.0
   - pandas
   - tensorboard>=2.5.0
   - matplotlib

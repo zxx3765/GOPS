@@ -130,6 +130,10 @@ def init_args(env, **args):
 
     # Start a new local Ray instance
     # This is necessary since all training scripts use evaluator, which uses ray.
-    ray.init(address="local")
+    ray.init(
+        include_dashboard=False,  # Disable dashboard to avoid Windows encoding issues
+        ignore_reinit_error=True,  # Allow reinit if already running
+        logging_level="ERROR"  # Reduce verbose logging
+    )
 
     return args

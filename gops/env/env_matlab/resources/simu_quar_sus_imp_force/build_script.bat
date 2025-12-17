@@ -2,7 +2,7 @@
 
 setlocal
 REM 初始化 conda 环境
-call conda activate gops
+call conda activate gops2
 REM 检查激活是否成功
 if %errorlevel% neq 0 (
     echo 错误：无法激活 conda 环境
@@ -18,7 +18,7 @@ slxpy generate
 
 REM 执行 Python 命令
 rem 执行第二条命令
-call conda activate gops
+call conda activate gops2
 REM 检查激活是否成功
 if %errorlevel% neq 0 (
     echo 错误：无法激活 conda 环境

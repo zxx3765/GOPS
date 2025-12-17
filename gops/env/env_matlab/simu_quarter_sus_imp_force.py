@@ -79,6 +79,7 @@ class SimuQuarterSusImpForce(gym.Env,):
         self.Q_acc_s = kwargs.get("punish_Q_acc_s", 0.0)
         # self.Q_acc_u = kwargs.get("punish_Q_acc_u", 0.0)
         self.Q_F = kwargs.get("punish_Q_F", 0.0)
+        self.Q_delta_F = kwargs.get("punish_Q_delta_F", 0.0)
         self.Q_flec_t = kwargs.get("punish_Q_flec_t", 0.0)
         self.b_deflec = kwargs.get("punish_b_deflec", 0.0)
         self.Q_acc_s_h = kwargs.get("punish_Q_acc_s_h", 0.0)
@@ -150,6 +151,7 @@ class SimuQuarterSusImpForce(gym.Env,):
             self.env.model_class.quarter_sus_imp_force_InstP.b_deflec = self.b_deflec
             self.env.model_class.quarter_sus_imp_force_InstP.Q_dot_s = self.Q_acc_s
             self.env.model_class.quarter_sus_imp_force_InstP.Q_F = self.Q_F
+            self.env.model_class.quarter_sus_imp_force_InstP.Q_delta_F = self.Q_delta_F
             self.env.model_class.quarter_sus_imp_force_InstP.Q_flec_t = self.Q_flec_t
             self.env.model_class.quarter_sus_imp_force_InstP.Q_dot_s_h = self.Q_acc_s_h
             self.env.model_class.quarter_sus_imp_force_InstP.Q_b_deflec = self.Q_b_deflec
