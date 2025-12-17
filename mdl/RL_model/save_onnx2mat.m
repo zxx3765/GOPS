@@ -1,6 +1,6 @@
 
-model_path = 'TD3-270374_opt.onnx';
-mat_path = 'TD3_270374_opt.mat';
+model_path = 'NN_controller111.onnx';
+mat_path = 'NN_controller111.mat';
 net = importNetworkFromONNX(model_path);
 X = dlarray([0.5,0.5,0.5,0.5], 'UU');
 layer = inputLayer([1,4],'UU');
